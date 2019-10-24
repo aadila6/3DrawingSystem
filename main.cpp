@@ -190,7 +190,7 @@ void copyVertex(std::vector<float> &s, std::vector<float> &t);
 int main(int argc, char **argv)
 {
     inputFileName = "bunny_Scene.txt";
-    pixel_size = .5;
+    pixel_size = 1;
 
     /*Window information*/
     // win_height = grid_height * pixel_size;
@@ -200,8 +200,8 @@ int main(int argc, char **argv)
     /** See https://www.opengl.org/resources/libraries/glut/spec3/spec3.html ***/
     
     float translationX=0, translationY=0 , sFactor=1, cliponeX=0,cliponeY=0, cliptwoX=0, cliptwoY=0;
-    grid_width = 1000;
-    grid_height = 1000;
+    grid_width = 500;
+    grid_height = 500;
 
     xMin = 0;
     xMax = grid_width;
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
     //create window of size (win_width x win_height
     glutInitWindowSize(win_width, win_height);
     //windown title is "glut demo"
-    glutCreateWindow("Two Dimentional Drawing");
+    glutCreateWindow("Three Dimentional Drawing");
    
     /*defined glut callback functions*/
     glutDisplayFunc(display); //rendering calls here
@@ -404,125 +404,8 @@ void writeFile(char *filename,std::vector<Polygon> &polygons){
     }
 }
 
-void drawLineDDA(std::vector<float> start, std::vector<float> end)
-{
-    int startX = (int)(start[0] + 0.5);
-    int startY = (int)(start[1] + 0.5);
-    int endX = (int)(end[0] + 0.5);
-    int endY = (int)(end[1] + 0.5);
-    
-    int dX = endX - startX;
-    int dY = endY - startY;
-    int steps, k;
-    float incX, incY;
-    float x = (float)startX;
-    float y = (float)startY;
-    
-    if(fabs(dX) > fabs(dY)) {
-    	steps = fabs(dX);
-    } else {
-    	steps = fabs(dY);
-    }
-    incX = (float)dX / (float)steps;
-    incY = (float)dY / (float)steps;
-    
-    loadBuffer[(int)(x + grid_width * y + 0.5)] = true;
-    for(int i = 0; i < steps; i++) {
-    	x += incX;
-    	y += incY;
-    	int roundX = (int)(x+0.5);
-    	int roundY = (int)(y+0.5);
-    	loadBuffer[roundX + grid_width * roundY] = true;
-    }
-}
 
 
-
-//Algorithm from class notes & textbook 
-void drawLineBresenham(std::vector<float> start, std::vector<float> end)
-{
-    float m = (end[1] - start[1]) / (end[0] - start[0]);
-    int x = 0, y = 0;
-    if(m == 1){
-        if(start[0]<end[0]){
-            y = start[0];
-        }else{
-            y = end[0];
-        }
-        for (int x = fmin(round(start[0]), round(end[0])); x <= fmax(round(start[0]), round(end[0])); x++) {
-            //Coord point(x, y++);
-            loadBuffer[y*grid_width+x]=true;
-        }
-    }else if(m == -1){
-        int y;
-        for (int x = fmin(round(start[0]), round(end[0])), y = fmax(round(start[1]), round(end[1])); x <= fmax(round(start[0]), round(end[0])); x++, y--) {
-            //Coord point(x, y);
-            loadBuffer[y*grid_width+x]=true;
-        }
-
-    }
-    if (fabs(m) < 1) {
-        int dx = fabs(end[0] - start[0]),
-            dy = fabs(end[1] - start[1]),
-            p = 2 * dy - dx;
-        if (start[0] > end[0])
-        {
-            x = end[0];
-            y = end[1];
-            end[0] = start[0];
-        }else{
-            x = start[0];
-            y = start[1];
-        }
-        while (x < end[0])
-        {
-            x++;
-            if (p < 0)
-            {
-                p = p + 2 * dy;
-            }
-            else
-            {
-                if (m> 0) {y++;} else {y--;}
-                p = p + 2 * dy - 2 * dx;
-            }
-            //draw_pix(x, y);
-            loadBuffer[y*grid_width+x]=true;
-        }
-    } else if (fabs(m) >= 1) {                    
-        int dx = fabs(end[0] - start[0]),
-            dy = fabs(end[1] - start[1]),
-            p = 2 * dx - dy;
-        if (start[1] > end[1])
-        {
-            x = end[0];
-            y = end[1];
-            end[1] = start[1];
-        }
-        else
-        {
-            x = start[0];
-            y = start[1];
-        }
-        while (y < end[1])
-        {
-            y++;
-            if (p < 0)
-            {
-                p = p + (2 * dx);
-            }else{
-                if(m>0){
-                    x++;
-                }else{
-                    x--;
-                }
-                p = p + (2 * dx) - (2 * dy);
-            }
-             //draw_pix(x, y);
-             loadBuffer[y*grid_width+x]=true;
-        }
-    } 
-}
 
 bool sortVert(const std::vector<float> &a, const std::vector<float> &b) {
 	return (a[0] < b[0]);
@@ -607,75 +490,8 @@ void rasterization(Polygon &p)
 		}
 	}
 }
-void translation(Coord transl, Polygon &poly){
-    
-    for(int i = 0; i < poly.count; i++) {
-        std::vector<float> temp = poly.vertices[i];
-        temp[0] = temp[0] + transl.x;
-        temp[1] = temp[1] + transl.y;
-        temp[2] = temp[2] + transl.z;
-        poly.vertices[i] = temp;
-    } 
-    poly.updateCentroid();
-}
 
-//需要改～
-void rotation(float angle, Polygon &poly){
-    
-    Coord trans2Ori;
-    trans2Ori.x = -poly.position[0];
-    trans2Ori.y = -poly.position[1];
-    trans2Ori.z = -poly.position[2];
-    Coord trans2Cen;
-    trans2Cen.x = poly.position[0]; 
-    trans2Cen.y = poly.position[1];
-    trans2Cen.z = poly.position[2];
-    float rotateAngleInRad = (angle / 180.0) * 3.14;
-    float cosA = cos(rotateAngleInRad);
-    float sinA = sin(rotateAngleInRad);
-
-    translation(trans2Ori, poly);   
-    for(int i = 0; i < poly.count; i++) {
-        float currX = poly.vertices[i][0];
-        float currY = poly.vertices[i][1];
-        float currZ = poly.vertices[i][2];
-        float nextX = currX * cosA + currY * (-sinA);
-        float nextY = currX * sinA + currY * cosA;
-        
-        std::vector<float> temp = {nextX,nextY,1} ;
-        poly.vertices[i] = temp;     
-    }
-    translation(trans2Cen, poly);    
-}
-
-
-void scaling(float scal, Polygon &poly){
-    Coord trans2Ori; 
-    trans2Ori.x = -poly.position[0];
-    trans2Ori.y = -poly.position[1];
-    trans2Ori.z = -poly.position[2];
-    Coord trans2Cen;
-    trans2Cen.x = poly.position[0];
-    trans2Cen.y = poly.position[1];
-    trans2Cen.z = poly.position[2];
-    translation(trans2Ori, poly);
-    for(int i = 0; i < poly.count; i++) {
-        float currX = poly.vertices[i][0];
-        float currY = poly.vertices[i][1];
-        float currZ = poly.vertices[i][2];
-        //std::cout<<"currx: "<<currX<<" currY: "<<currY<<std::endl;
-        float nextX = currX * scal;
-        float nextY = currY * scal;
-        float nextZ = currZ * scal;
-        //std::cout<<"nextx: "<<nextX<<" nextY: "<<nextY<<std::endl;
-
-        poly.vertices[i][0] = nextX;
-        poly.vertices[i][1] = nextY;
-        poly.vertices[i][2] = nextZ;
-    }
-    translation(trans2Cen, poly);  
-}
-
+//Algorithim that copied from the book
 /////////////////////////////////////////////////////////////////////////////////////////////
 typedef float Matrix4x4 [4][4];
 Matrix4x4 matComposite;
@@ -770,6 +586,17 @@ void drawLine(float x1 ,float y1, float x2, float y2){
     glVertex2f(x2,y2);
     glEnd();
 }
+
+void drawSplitLines(){
+    glColor3f(0.0, 0.0, 0.0);
+    glBegin(GL_LINES);
+    glVertex2f((0),(.5*win_height));
+    glVertex2f((win_width),(.5*win_height));
+    glVertex2f(.5*win_width,(0));
+    glVertex2f((.5*win_width),(win_height));
+    glEnd();
+    
+}
 /////////////////////////////////////////////////////////////////////////////////////////////
 //this is where we render the screen
 void display()
@@ -782,10 +609,11 @@ void display()
     //define my matrix with my coordinates
     //gltranslatef
     //glscale
+    drawSplitLines();
     matrix4x4SetIdentity (matComposite);
-    rotate3D (Coord((polygonList[0].position[0]*100),(polygonList[0].position[2]*100),0), Coord((polygonList[0].position[0]*100),(polygonList[0].position[2]*100)+5,0), 90);  //  First transformation: Rotate.
-    scale3D (8.0, 8.0, 8.0, polygonList[0].position);   //  Second transformation: Scale.
-    //translate3D (20, 20, 20);        //  Final transformation: Translate.
+    //rotate3D (Coord((polygonList[0].position[0]*100),(polygonList[0].position[2]*100),0), Coord((polygonList[0].position[0]*100),(polygonList[0].position[2]*100)+20,0), 90);  //  First transformation: Rotate.
+    scale3D (4.0, 4.0, 4.0, polygonList[0].position);   //  Second transformation: Scale.
+    translate3D (10, 10, 10);        //  Final transformation: Translate.
     //polygonList[0].printPolygon();
     cPolygonList.clear();
     for(int u=0;u<polygonList.size();u++){
@@ -797,15 +625,29 @@ void display()
         cPolygonList[0].vertices[i][2] = matComposite[2][0]*polygonList[0].vertices[i][0]*grid_width +matComposite[2][1]* polygonList[0].vertices[i][1]*grid_width + matComposite[2][2]*polygonList[0].vertices[i][2]*grid_width+matComposite[2][3]*1;
     }
     //std::cout<<"a: "<<matComposite[0][3]<<"  b: "<<matComposite[1][3]<<" c: "<<matComposite[2][3]<<std::endl;
-    for(int i = 0; i<polygonList[0].count; i++){
-        draw_pix((cPolygonList[0].vertices[i][0]),(cPolygonList[0].vertices[i][1]));
+
+    for(int i = 0; i<polygonList[0].count; i++){ //0,1 xy
+        draw_pix((cPolygonList[0].vertices[i][0]*(.5)),(cPolygonList[0].vertices[i][1]*(.5)));
+        //std::cout<<"X: "<<(polygonList[0].vertices[i][0])*100<<"  Y: "<<(polygonList[0].vertices[i][1])*100<<std::endl;
+    }
+    for(int i = 0; i<polygonList[0].count; i++){//0,2 xz
+        draw_pix((cPolygonList[0].vertices[i][0]*(.5)),(cPolygonList[0].vertices[i][2]*(.5)+.5*grid_width));
+        //std::cout<<"X: "<<(polygonList[0].vertices[i][0])*100<<"  Y: "<<(polygonList[0].vertices[i][1])*100<<std::endl;
+    }
+    for(int i = 0; i<polygonList[0].count; i++){//1,2 yz
+        draw_pix((cPolygonList[0].vertices[i][1]*(.5)+.5*grid_width),(cPolygonList[0].vertices[i][2]*(.5)+.5*grid_width));
         //std::cout<<"X: "<<(polygonList[0].vertices[i][0])*100<<"  Y: "<<(polygonList[0].vertices[i][1])*100<<std::endl;
     }
     for(int k = 0; k<cPolygonList[0].edgeCount;k++){
         int a = cPolygonList[0].edges[k][0]-1;
         int b = cPolygonList[0].edges[k][1]-1;
-        drawLine(cPolygonList[0].vertices[a][0],cPolygonList[0].vertices[a][1],cPolygonList[0].vertices[b][0],cPolygonList[0].vertices[b][1]);
+        drawLine(cPolygonList[0].vertices[a][0]*(.5),cPolygonList[0].vertices[a][1]*(.5),cPolygonList[0].vertices[b][0]*(.5),cPolygonList[0].vertices[b][1]*(.5));
+        drawLine(cPolygonList[0].vertices[a][0]*(.5),cPolygonList[0].vertices[a][2]*(.5)+.5*grid_width,cPolygonList[0].vertices[b][0]*(.5),cPolygonList[0].vertices[b][2]*(.5)+.5*grid_width);
+        drawLine(cPolygonList[0].vertices[a][1]*(.5)+.5*grid_width,cPolygonList[0].vertices[a][2]*(.5)+.5*grid_width,cPolygonList[0].vertices[b][1]*(.5)+.5*grid_width,cPolygonList[0].vertices[b][2]*(.5)+.5*grid_width);
     }
+
+
+    
     glutSwapBuffers();
     //checks for opengl errors
     check();
@@ -911,7 +753,7 @@ void display()
 void draw_pix(int x, int y)
 {
     glBegin(GL_POINTS);
-    glColor3f(0.6, 0.5, 0.0);
+    glColor3f(0.41, 0.4, 0.4);
     glVertex3f(x + .5, y + .5, 0);
     glEnd();
 }
@@ -1030,177 +872,3 @@ void check()
     }
 }
 
-
-void polyClip(Polygon &poly) {
-    for(int dir = 0; dir < 4; dir++) {
-        if(dir == 0) {
-            polyClipLeft(poly);
-        } else if(dir == 1) {
-            polyClipRight(poly);
-        } else  if(dir == 2) {
-            polyClipBottom(poly);
-        } else if(dir == 3) {
-            polyClipTop(poly);
-        }
-    }
-}
-
-void polyClipLeft(Polygon &poly) {
-    std::vector<std::vector<float>> vs;
-    int n = poly.count;
-    int vsLen = 0;
-
-    for(int i = 0; i < n; i++) {
-        std::vector<float> vA = poly.vertices[i];
-        std::vector<float> vB = poly.vertices[(i + 1) % n];
-
-        //outside?
-        if(vA[0] < xMin && vB[0] < xMin) {
-            //discard
-        } else if(vA[0] >= xMin && vB[0] >= xMin) {
-            //inside?
-            //keep later one
-            vs.push_back(vB);
-            vsLen += 1;
-        } else  {
-            //partial            
-            //find vert
-            float k = (vB[1]-vA[1]) / (vB[0] - vA[0]);
-            float intersectVal = vA[1] + (xMin-vA[0]) * k;
-            std::vector<float> v = {xMin, intersectVal, 1.0};
-            vs.push_back(v);
-            vsLen += 1;  
-            
-            if(vB[0] > xMin) {
-                vs.push_back(vB);   
-                vsLen += 1;  
-            }      
-        }
-    }
-
-    poly.count = vsLen;
-    poly.vertices = vs;
-}
-
-void polyClipRight(Polygon &poly) {
-    std::vector<std::vector<float>> vs;
-    int n = poly.count;
-    int vsLen = 0;
-
-    for(int i = 0; i < n; i++) {
-        std::vector<float> vA = poly.vertices[i];
-        std::vector<float> vB = poly.vertices[(i + 1) % n];
-
-        //outside?
-        if(vA[0] > xMax && vB[0] > xMax) {
-            //discard
-        } else if(vA[0] <= xMax && vB[0] <= xMax) {
-            //inside?
-            vs.push_back(vB);
-            vsLen += 1;
-        } else  {
-            //partial
-            //find vert
-        
-            float k = (vB[1]-vA[1]) / (vB[0] - vA[0]);
-            float intersectVal = vA[1] + (xMax-vA[0]) * k;
-            std::vector<float> v = {xMax, intersectVal, 1.0};
-
-            vs.push_back(v);
-            vsLen += 1;      
-            
-            if(vB[0] < xMax) {
-                vs.push_back(vB);
-                vsLen += 1;
-            }  
-        }
-    }
-
-    poly.count = vsLen;     
-    poly.vertices = vs;
-}
-
-void polyClipBottom(Polygon &poly) {
-    std::vector<std::vector<float>> vs;
-    int n = poly.count;
-    int vsLen = 0;
-
-    for(int i = 0; i < n; i++) {
-        std::vector<float> vA = poly.vertices[i];
-        std::vector<float> vB = poly.vertices[(i + 1) % n];
-
-        //outside?
-        if(vA[1] < yMin && vB[1] < yMin) {
-            //discard
-        } else if(vA[1] >= yMin && vB[1] >= yMin) {
-            //inside?
-            vs.push_back(vB);
-            vsLen += 1;
-        } else  {
-            //find vert
-        
-            float k = (vB[1]-vA[1]) / (vB[0] - vA[0]);
-            float intersectVal = vA[0] + (yMin-vA[1]) / k;
-            std::vector<float> v = {intersectVal, yMin, 1.0};
-
-            vs.push_back(v);
-            vsLen += 1;   
-                 
-            //partial
-            if(vB[1] > yMin) {
-                vs.push_back(vB);   
-                 vsLen += 1; 
-            }
-        }
-    }
-    poly.count = vsLen;    
-    poly.vertices = vs;
-}
-
-void polyClipTop(Polygon &poly) {
-    std::vector<std::vector<float>> vs;
-    int n = poly.count;
-    int vsLen = 0;
-
-    for(int i = 0; i < n; i++) {
-        std::vector<float> vA = poly.vertices[i];
-        std::vector<float> vB = poly.vertices[(i + 1) % n];
-
-        //outside?
-        if(vA[1] > yMax && vB[1] > yMax) {
-            //discard
-        } else if(vA[1] <= yMax && vB[1] <= yMax) {
-            //inside?
-            vs.push_back(vB);
-            vsLen += 1;
-        } else  { 
-            //find vert
-        
-            float k = (vB[1]-vA[1]) / (vB[0] - vA[0]);
-            float intersectVal = vA[0] + (yMax-vA[1]) / k;
-            std::vector<float> v = {intersectVal, yMax, 1.0};
-
-            vs.push_back(v);
-            vsLen += 1;  
-            
-            //partial
-            if(vB[1] < yMax) {
-                vs.push_back(vB);   
-                vsLen += 1;  
-            }
-        }
-    }
-
-    poly.count = vsLen;    
-    poly.vertices = vs;
-}
-
-void exchangeV(std::vector<float> &vA, std::vector<float> &vB) {
-    float tempX, tempY;
-    tempX = vA[0];
-    tempY = vA[1];
-    vA[0] = vB[0];
-    vA[1] = vB[1];
-    vB[0] = tempX;
-    vB[1] = tempY;
-}
