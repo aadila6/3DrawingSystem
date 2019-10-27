@@ -42,6 +42,11 @@ constexpr int LEFT = 1;   // 0001
 constexpr int RIGHT = 2;  // 0010
 constexpr int BOTTOM = 4; // 0100
 constexpr int TOP = 8;    // 1000
+
+constexpr int X = 0;
+constexpr int Y = 1;
+constexpr int Z = 2;
+
 /****set in main()****/
 //the number of pixels in the grid
 char *inputFileName;
@@ -77,25 +82,25 @@ void check();
 
 
 class Coord {
-	public:
-		float x, y, z;
     public:
-    	Coord(){};
-    	Coord(float x, float y, float z) {
-    		this->x = x;
-    		this->y = y;
+        float x, y, z;
+    public:
+        Coord(){};
+        Coord(float x, float y, float z) {
+            this->x = x;
+            this->y = y;
             this->z = z;
-    	}
+        }
 };
 class ECoord{
-	public:
-		int x, y;
     public:
-    	ECoord(){};
-    	ECoord(int x, int y) {
-    		this->x = x;
-    		this->y = y;
-    	}
+        int x, y;
+    public:
+        ECoord(){};
+        ECoord(int x, int y) {
+            this->x = x;
+            this->y = y;
+        }
 };
 
 
@@ -103,38 +108,38 @@ class Polygon {
     //Center of mass is 0 respect to polygon itself
     //But position vector is the centroid from the viewPort
     public:
-		int count;
-		std::vector<float> position;
+        int count;
+        std::vector<float> position;
         int edgeCount;
-		Coord transVec;
-		float angle;
-		float scale;
-		std::vector<std::vector<float>> vertices;
+        Coord transVec;
+        float angle;
+        float scale;
+        std::vector<std::vector<float>> vertices;
         std::vector<std::vector<int>> edges;
 
     public:
-    	void printPolygon();
-    	void updateCentroid();
-    	Polygon(){};
-    	
-    	Polygon(std::vector<Coord> &vert, std::vector <ECoord> &edges) {
-		    float xtotal = 0, ytotal = 0;
-		    this -> count = vert.size(); 
+        void printPolygon();
+        void updateCentroid();
+        Polygon(){};
+        
+        Polygon(std::vector<Coord> &vert, std::vector <ECoord> &edges) {
+            float xtotal = 0, ytotal = 0;
+            this -> count = vert.size(); 
             this ->edgeCount = edges.size();
-		    for(int i = 0; i < vert.size(); i++){
-		        vertices.push_back(std::vector<float>{vert[i].x, vert[i].y, vert[i].z});
-		    }
+            for(int i = 0; i < vert.size(); i++){
+                vertices.push_back(std::vector<float>{vert[i].x, vert[i].y, vert[i].z});
+            }
             for(int j=0; j<edges.size();j++){
                 this->edges.push_back(std::vector<int>{edges[j].x, edges[j].y});
             }
-		    this -> updateCentroid();
+            this -> updateCentroid();
 
-		    transVec.x = 0.0;
-		    transVec.y = 0.0;
+            transVec.x = 0.0;
+            transVec.y = 0.0;
             transVec.z = 0.0;
-		    angle = 0.0;
-		    scale = 1.0;
-		}
+            angle = 0.0;
+            scale = 1.0;
+        }
 };
 
 void Polygon::printPolygon() {
@@ -256,7 +261,7 @@ void init()
     //checks for OpenGL errors
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-	glOrtho(0, grid_width, 0, grid_height, -1, 1);
+    glOrtho(0, grid_width, 0, grid_height, -1, 1);
     check();
 }
 
@@ -404,91 +409,88 @@ void writeFile(char *filename,std::vector<Polygon> &polygons){
     }
 }
 
-
-
-
 bool sortVert(const std::vector<float> &a, const std::vector<float> &b) {
-	return (a[0] < b[0]);
+    return (a[0] < b[0]);
 }
    
 void rasterization(Polygon &p)
 {
-	int numLine = p.count;
-	for(int y = 0; y < grid_height; y++) {
-		std::vector<std::vector<float>> arr;
-		//for each line of poly
-		for(int n = 0; n < numLine; n++) {
-			std::vector<float> vA = p.vertices[n];
-			std::vector<float> vB = p.vertices[(n + 1) % numLine];
-			
-			float x1 = vA[0];
-			float y1 = vA[1];
-			float x2 = vB[0];
-			float y2 = vB[1];		
-			
-			if(y1 == y && y2 == y) {
-				continue;
-			}
-			
-			if((y1 > y && y2 > y) || (y1 < y && y2 < y)) {
-				continue;
-			}
-			
-			//swap y2 >> y1
-			if(y2 < y1) {
-				float tempx = x1;
-				float tempy = y1;
-				x1 = x2;
-				y1 = y2;
-				x2 = tempx;
-				y2 = tempy;
-			}
-			
-			//min
-			if(y1 == y) {
-				arr.push_back(std::vector<float>{x1, (float)y, 1.0});
-				continue;
-			}
-			
-			//max
-			if(y2 == y) {
-				continue;
-			}
-			
-			//vertical
-			if(x1 == x2) {
-				arr.push_back(std::vector<float>{x1, (float)y, 1.0});
-				continue;
-			}
-			
-			//intx
-			float k = (y2-y1) / (x2-x1);
+    int numLine = p.count;
+    for(int y = 0; y < grid_height; y++) {
+        std::vector<std::vector<float>> arr;
+        //for each line of poly
+        for(int n = 0; n < numLine; n++) {
+            std::vector<float> vA = p.vertices[n];
+            std::vector<float> vB = p.vertices[(n + 1) % numLine];
+            
+            float x1 = vA[0];
+            float y1 = vA[1];
+            float x2 = vB[0];
+            float y2 = vB[1];        
+            
+            if(y1 == y && y2 == y) {
+                continue;
+            }
+            
+            if((y1 > y && y2 > y) || (y1 < y && y2 < y)) {
+                continue;
+            }
+            
+            //swap y2 >> y1
+            if(y2 < y1) {
+                float tempx = x1;
+                float tempy = y1;
+                x1 = x2;
+                y1 = y2;
+                x2 = tempx;
+                y2 = tempy;
+            }
+            
+            //min
+            if(y1 == y) {
+                arr.push_back(std::vector<float>{x1, (float)y, 1.0});
+                continue;
+            }
+            
+            //max
+            if(y2 == y) {
+                continue;
+            }
+            
+            //vertical
+            if(x1 == x2) {
+                arr.push_back(std::vector<float>{x1, (float)y, 1.0});
+                continue;
+            }
+            
+            //intx
+            float k = (y2-y1) / (x2-x1);
             float intersectVal = x1 + (y-y1) / k;
             arr.push_back(std::vector<float>{intersectVal, (float)y, 1.0});
-		}
-				
-		std::sort(arr.begin(), arr.end(), sortVert);
-		
-		int numPair = arr.size() / 2;
-		for(int k = 0; k < numPair; k++) {
-			std::vector<float> p1 = arr[2 * k];
-			std::vector<float> p2 = arr[2 * k + 1];
-			
-			float xL = p1[0];
-			float xH = p2[0];
-			
-			if(floor(xH) == xH) {
-				xH--;
-			}
-			
-			int xLi = ceil(xL);
-			int xHi = floor(xH);
-			
-			for(int posX = xLi; posX < xHi + 1; posX++) {
-				loadBuffer[posX + y * grid_width] = true;
-			}
-		}
-	}
+        }
+                
+        std::sort(arr.begin(), arr.end(), sortVert);
+        
+        int numPair = arr.size() / 2;
+        for(int k = 0; k < numPair; k++) {
+            std::vector<float> p1 = arr[2 * k];
+            std::vector<float> p2 = arr[2 * k + 1];
+            
+            float xL = p1[0];
+            float xH = p2[0];
+            
+            if(floor(xH) == xH) {
+                xH--;
+            }
+            
+            int xLi = ceil(xL);
+            int xHi = floor(xH);
+            
+            for(int posX = xLi; posX < xHi + 1; posX++) {
+                loadBuffer[posX + y * grid_width] = true;
+            }
+        }
+    }
 }
 
 //Algorithim that copied from the book
@@ -588,7 +590,7 @@ void drawLine(float x1 ,float y1, float x2, float y2){
 }
 
 void drawSplitLines(){
-    glColor3f(0.0, 0.0, 0.0);
+    glColor3f(0.41, 0.4, 0.4);
     glBegin(GL_LINES);
     glVertex2f((0),(.5*win_height));
     glVertex2f((win_width),(.5*win_height));
@@ -603,64 +605,96 @@ void display()
 {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
-    //Translate my NDC to WC
-    //std::cout<<"X: "<<polygonList[0].vertices[0][0]<<"  Y: "<<polygonList[0].vertices[0][1]<<std::endl;
-    //std::cout<<"X: "<<polygonList[0].vertices[0][1]<<"  Y: "<<polygonList[0].vertices[0][1]<<std::endl;
-    //define my matrix with my coordinates
-    //gltranslatef
-    //glscale
+    float deltaX = xMax - xMin;
+    float deltaY =yMax - yMin;
+    float delta = fmax(deltaX, deltaY);
+
     drawSplitLines();
+    float scale = 5;
+    float translX = 10;
     matrix4x4SetIdentity (matComposite);
-    //rotate3D (Coord((polygonList[0].position[0]*100),(polygonList[0].position[2]*100),0), Coord((polygonList[0].position[0]*100),(polygonList[0].position[2]*100)+20,0), 90);  //  First transformation: Rotate.
-    scale3D (4.0, 4.0, 4.0, polygonList[0].position);   //  Second transformation: Scale.
-    translate3D (10, 10, 10);        //  Final transformation: Translate.
+    //rotate3D (Coord((polygonList[0].position[0]*100),(polygonList[0].position[2]*100),0), Coord((polygonList[0].position[0]*100),(polygonList[0].position[2]*100)+2,0), 90);  //  First transformation: Rotate.
+
+    scale3D (scale, scale, scale, polygonList[0].position);   //  Second transformation: Scale.
+    translate3D (translX, translX, translX);        //  Final transformation: Translate.
     //polygonList[0].printPolygon();
     cPolygonList.clear();
     for(int u=0;u<polygonList.size();u++){
-        cPolygonList.push_back(polygonList[u]);
-    }
+        cPolygonList.push_back(polygonList[u]);}
+   
     for(int i=0; i<polygonList[0].count; i++){
         cPolygonList[0].vertices[i][0] = matComposite[0][0]*polygonList[0].vertices[i][0]*grid_width +matComposite[0][1]* polygonList[0].vertices[i][1]*grid_width + matComposite[0][2]*polygonList[0].vertices[i][2]*grid_width+matComposite[0][3]*1;
         cPolygonList[0].vertices[i][1] = matComposite[1][0]*polygonList[0].vertices[i][0]*grid_width +matComposite[1][1]* polygonList[0].vertices[i][1]*grid_width+ matComposite[1][2]*polygonList[0].vertices[i][2]*grid_width+matComposite[1][3]*1; 
         cPolygonList[0].vertices[i][2] = matComposite[2][0]*polygonList[0].vertices[i][0]*grid_width +matComposite[2][1]* polygonList[0].vertices[i][1]*grid_width + matComposite[2][2]*polygonList[0].vertices[i][2]*grid_width+matComposite[2][3]*1;
     }
-    //std::cout<<"a: "<<matComposite[0][3]<<"  b: "<<matComposite[1][3]<<" c: "<<matComposite[2][3]<<std::endl;
-
+   
     for(int i = 0; i<polygonList[0].count; i++){ //0,1 xy
-        draw_pix((cPolygonList[0].vertices[i][0]*(.5)),(cPolygonList[0].vertices[i][1]*(.5)));
-        //std::cout<<"X: "<<(polygonList[0].vertices[i][0])*100<<"  Y: "<<(polygonList[0].vertices[i][1])*100<<std::endl;
+        if((cPolygonList[0].vertices[i][0]<grid_width)&&(cPolygonList[0].vertices[i][1]<grid_height)){
+            draw_pix((cPolygonList[0].vertices[i][0]*(.5)),(cPolygonList[0].vertices[i][1]*(.5)));
+        }
     }
     for(int i = 0; i<polygonList[0].count; i++){//0,2 xz
-        draw_pix((cPolygonList[0].vertices[i][0]*(.5)),(cPolygonList[0].vertices[i][2]*(.5)+.5*grid_width));
+        if(((cPolygonList[0].vertices[i][0])<grid_width)&& ((cPolygonList[0].vertices[i][2])<grid_height)){
+            draw_pix((cPolygonList[0].vertices[i][0]*(.5)),(cPolygonList[0].vertices[i][2]*(.5)+.5*grid_width));}
         //std::cout<<"X: "<<(polygonList[0].vertices[i][0])*100<<"  Y: "<<(polygonList[0].vertices[i][1])*100<<std::endl;
     }
     for(int i = 0; i<polygonList[0].count; i++){//1,2 yz
+        if((cPolygonList[0].vertices[i][1]<grid_width) && ((cPolygonList[0].vertices[i][2])<grid_height)){
         draw_pix((cPolygonList[0].vertices[i][1]*(.5)+.5*grid_width),(cPolygonList[0].vertices[i][2]*(.5)+.5*grid_width));
-        //std::cout<<"X: "<<(polygonList[0].vertices[i][0])*100<<"  Y: "<<(polygonList[0].vertices[i][1])*100<<std::endl;
+    }//std::cout<<"X: "<<(polygonList[0].vertices[i][0])*100<<"  Y: "<<(polygonList[0].vertices[i][1])*100<<std::endl;
     }
     for(int k = 0; k<cPolygonList[0].edgeCount;k++){
         int a = cPolygonList[0].edges[k][0]-1;
         int b = cPolygonList[0].edges[k][1]-1;
-        drawLine(cPolygonList[0].vertices[a][0]*(.5),cPolygonList[0].vertices[a][1]*(.5),cPolygonList[0].vertices[b][0]*(.5),cPolygonList[0].vertices[b][1]*(.5));
-        drawLine(cPolygonList[0].vertices[a][0]*(.5),cPolygonList[0].vertices[a][2]*(.5)+.5*grid_width,cPolygonList[0].vertices[b][0]*(.5),cPolygonList[0].vertices[b][2]*(.5)+.5*grid_width);
-        drawLine(cPolygonList[0].vertices[a][1]*(.5)+.5*grid_width,cPolygonList[0].vertices[a][2]*(.5)+.5*grid_width,cPolygonList[0].vertices[b][1]*(.5)+.5*grid_width,cPolygonList[0].vertices[b][2]*(.5)+.5*grid_width);
+        if((cPolygonList[0].vertices[a][0]<grid_width)&&(cPolygonList[0].vertices[b][0]<grid_width)&&
+           (cPolygonList[0].vertices[b][1]<grid_height)&&(cPolygonList[0].vertices[a][1]<grid_height)){
+            drawLine(cPolygonList[0].vertices[a][0]*(.5),
+                     cPolygonList[0].vertices[a][1]*(.5),
+                     cPolygonList[0].vertices[b][0]*(.5),
+                     cPolygonList[0].vertices[b][1]*(.5));
+        }
+        if(((cPolygonList[0].vertices[a][0])<grid_width)&&((cPolygonList[0].vertices[b][0])<grid_width)&& ((cPolygonList[0].vertices[b][2])<grid_height)&&((cPolygonList[0].vertices[a][2])<grid_height)){
+            drawLine(cPolygonList[0].vertices[a][0]*(.5),
+                     cPolygonList[0].vertices[a][2]*(.5)+.5*grid_width,
+                     cPolygonList[0].vertices[b][0]*(.5),
+                     cPolygonList[0].vertices[b][2]*(.5)+.5*grid_width);
+        }
+        if((cPolygonList[0].vertices[a][1]<grid_width)&&(cPolygonList[0].vertices[b][1]<grid_width)&&
+        ((cPolygonList[0].vertices[b][2])<grid_height) && ((cPolygonList[0].vertices[a][2])<grid_height)){
+        drawLine(cPolygonList[0].vertices[a][1]*(.5)+.5*grid_width,
+                 cPolygonList[0].vertices[a][2]*(.5)+.5*grid_width,
+                 cPolygonList[0].vertices[b][1]*(.5)+.5*grid_width,
+                 cPolygonList[0].vertices[b][2]*(.5)+.5*grid_width);
+        }
     }
-
-
     
+    
+//    glBegin(GL_LINES);
+//    glVertex2f(0, 1);
+//    glVertex2f(0, -1);
+//    glVertex2f(-1, 0);
+//    glVertex2f(1,0);
+//    glEnd();
+    /*
+     Set minmax
+     Loop throught all polygons to find the max extrema
+     Add margin to the sides
+     loop thru to map world coordinates to normalized device coordinates
+     */
+
     glutSwapBuffers();
     //checks for opengl errors
     check();
     
     /*
-	cPolygonList.clear();
-	delete(loadBuffer);
+    cPolygonList.clear();
+    delete(loadBuffer);
     loadBuffer = NULL;
-	loadBuffer = new bool[grid_width * grid_height];
-	for(int i = 0; i < grid_width * grid_height; i++) {
-		loadBuffer[i] = false;
-	}
-	
+    loadBuffer = new bool[grid_width * grid_height];
+    for(int i = 0; i < grid_width * grid_height; i++) {
+        loadBuffer[i] = false;
+    }
+    
     //clears the screen
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -729,17 +763,17 @@ void display()
             std::vector<float> cur = p.vertices[i];
             std::vector<float> prev = p.vertices[(i + p.count - 1) % p.count];
             
-           	if(lineMode == 'd'){
+               if(lineMode == 'd'){
                 drawLineDDA(cur, prev);
-           	}else{
+               }else{
                 drawLineBresenham(cur, prev);
-           	}
+               }
         }
         
         if(rasterswitch){
-        	for(auto p : cPolygonList) {
-        		rasterization(p);
-        	}
+            for(auto p : cPolygonList) {
+                rasterization(p);
+            }
         }
     }    
     
@@ -759,16 +793,16 @@ void draw_pix(int x, int y)
 }
 
 void draw() {
-	glColor3f(.2, .2, 1.0);
-	
-	for(int i = 0; i < grid_width * grid_height; i++) {
-		if(loadBuffer[i]) {
-			glBegin(GL_POINTS);
-			glVertex2i(i % grid_width, i / grid_width);
-			glEnd();
-		}
-	}	
-	glFlush();
+    glColor3f(.2, .2, 1.0);
+    
+    for(int i = 0; i < grid_width * grid_height; i++) {
+        if(loadBuffer[i]) {
+            glBegin(GL_POINTS);
+            glVertex2i(i % grid_width, i / grid_width);
+            glEnd();
+        }
+    }    
+    glFlush();
 }
 
 /*Gets called when display size changes, including initial craetion of the display*/
@@ -871,4 +905,5 @@ void check()
         exit(1);
     }
 }
+
 
