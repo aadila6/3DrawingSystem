@@ -64,7 +64,7 @@ float zMax;
 
 const double pi = 3.14159265358979323846;
 
-
+bool begincheck;
 //the size of pixels sets the inital window height and width
 //don't make the pixels too large or the screen size will be larger than
 //your display size
@@ -182,12 +182,12 @@ void translation(Coord transl, Polygon &poly);
 void rotation(float angle, Polygon &poly);
 void scaling(float scal, Polygon &poly);
 char lineMode;
-bool rasterswitch;
+bool bBoxswitch;
 float angleG;
 float scaleG;
 int iD;
-float translationXG, translationYG,
-sFactor, cliponeX,cliponeY, cliptwoX, cliptwoY;
+float translationXG, translationYG, translationZG,
+rotX, rotY, rotZ, ratX,ratY,ratZ;
 bool sortVert(const std::vector<float> &a, const std::vector<float> &b);
 void polyClip(Polygon &poly);
 void polyClipLeft(Polygon &poly);
@@ -200,7 +200,7 @@ void copyVertex(std::vector<float> &s, std::vector<float> &t);
 
 int main(int argc, char **argv)
 {
-    inputFileName = "testScene.txt";
+    inputFileName = "bunny_sceneCopy.txt";
     pixel_size = 1;
     
     /*Window information*/
@@ -218,14 +218,21 @@ int main(int argc, char **argv)
     xMax = grid_width;
     yMin = 0;
     yMax = grid_height;
-    
+    begincheck = true;
     lineMode = 'd';
-    rasterswitch = false;
+    bBoxswitch = true;
     angleG = 0;
     scaleG = 1;
     iD = -1;
+    rotX = 0;
+    rotY = 0;
+    rotZ = 0;
+    ratX = 0;
+    ratY = 0;
+    ratZ = 0;
     translationXG = 0;
     translationYG = 0;
+    translationZG = 0;
     win_height = 500; //grid_height * pixel_size;
     win_width = 500; //grid_width * pixel_size;
     //    loadBuffer = new bool[grid_height* grid_width];
@@ -235,7 +242,7 @@ int main(int argc, char **argv)
     //       }
     //    }
     readinput(inputFileName, polygonList);
-    polygonList[0].printPolygon();
+    //polygonList[0].printPolygon();
     //polygonList[1].printPolygon();
     //polygonList[2].printPolygon();
     glutInit(&argc, argv);
@@ -266,84 +273,78 @@ void init()
 {
     //set clear color (Default background to white)
     glClearColor(1.0, 1.0, 1.0, 1.0);
-    glLineWidth(2.0f);
+    glLineWidth(1.0f);
     //checks for OpenGL errors
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, grid_width, 0, grid_height, -1, 1);
     check();
 }
-
+void resetConstrains(){
+    iD=0;
+    translationXG = 0;
+    translationYG = 0;
+    translationZG = 0;
+    rotX = 0;
+    rotY = 0;
+    rotZ = 0;
+    ratX = 0;
+    ratY = 0;
+    ratZ = 0;
+    bBoxswitch = true;
+    scaleG = 1;
+}
 //called repeatedly when glut isn't doing anything else
 void idle()
 {
     //redraw the scene over and over again
     glutPostRedisplay();
-    iD=0;
-    angleG=0;
-    translationXG = 0;
-    translationYG=0;
+    resetConstrains();
     
-    // int choice;
-    //     char line;
-    //     char ra;
-    //     std::cout << "Bresemham or DDA [b/d]: ";
-    //     std::cin>>line;
-    //     lineMode = line;
-    //     std::cout << "Rasterize all polygons? [y/n]: ";
-    //     std::cin>>ra;
-    //     if(ra=='y'){rasterswitch=true;}else{rasterswitch=false;}
-    //     std::cout << "1. Rotation \n";
-    //     std::cout << "2. Translation\n";
-    //     std::cout << "3. Scalling \n";
-    //     std::cout << "4. Clipping \n";
-    //     std::cout << "5. Exit \n";
-    //     std::cout << "Please select one of options above for your operation: ";
-    //     std::cin>> choice;
-    //     switch (choice)
-    //     {
-    //         case 1:
-    //             std::cout << "Please enter rotation angle: ";
-    //             std::cin>> angleG;
-    //             std::cout << "Please enter Polygon ID, -1 for all together, 1,2,3.. for specific ones: ";
-    //             std::cin>> iD;
-    //             break;
-    //         case 2:
-    //             std::cout << "Please enter translation in x and y direction: ";
-    //             std::cin>> translationXG >> translationYG;
-    //             std::cout << "Please enter Polygon ID, -1 for all together, 1,2,3.. for specific ones: ";
-    //             std::cin>> iD;
-    //             break;
-    //         case 3:
-    //             std::cout << "Please enter scalling factor: " ;
-    //             std::cin>> scaleG;
-    //             std::cout << "Please enter Polygon ID, -1 for all together, 0,1,2, for specific ones: ";
-    //             std::cin>> iD;
-    //             break;
-    //         case 4:
-    //             std::cout << "Please enter left clipping coordinates seperated by a space: ";
-    //             std::cin>> xMin >> yMin;
-    //             std::cout << "Please enter the right clipping coordinates seperated by a space: " ;
-    //             std::cin>> xMax >> xMax;
-    //             break;
-    //         case 5:
-    //             writeFile(inputFileName, polygonList);
-    //             exit(0);
-    //             break;
-    //         default:
-    //             break;
-    //     }
+    int choice;
+    char line;
+    char ra;
+    
+    std::cout << "Bounding Box [y/n]: ";
+    std::cin>>ra;
+    if(ra=='y'){bBoxswitch=true;}else{bBoxswitch=false;}
+    std::cout << "1. Rotation \n";
+    std::cout << "2. Translation\n";
+    std::cout << "3. Scalling \n";
+    std::cout << "4. Exit \n";
+    std::cout << "Please select one of options above for your operation: ";
+    std::cin>> choice;
+    switch (choice)
+    {
+        case 1:
+            std::cout << "Please enter rotation angle: ";
+            std::cin>> angleG;
+            std::cout << "Please enter rotation Axis (EX. 1 1 1 0 0 0): ";
+            std::cin >> rotX >> rotY >> rotZ >> ratX >> ratY >> ratZ;
+            std::cout << "Please enter Polygon ID like 0,1,2,3.. for specific ones: ";
+            std::cin>> iD;
+            break;
+        case 2:
+            std::cout << "Please enter translation vector seperated by a space (EX. 2 2 2): ";
+            std::cin>> translationXG >> translationYG >> translationZG;
+            std::cout << "Please enter Polygon ID like 0,1,2,3.. for specific ones: ";
+            std::cin>> iD;
+            break;
+        case 3:
+            std::cout << "Please enter scalling factor: " ;
+            std::cin>> scaleG;
+            std::cout << "Please enter Polygon ID like 0,1,2,3.. for specific ones: ";
+            std::cin>> iD;
+            break;
+        case 4:
+            //writeFile(inputFileName, polygonList);
+            exit(0);
+            break;
+        default:
+            break;
+    }
 }
 
-void swapCor(Coord start, Coord end)
-{
-    int tempx = start.x;
-    int tempy = start.y;
-    start.x = end.x;
-    start.y = end.y;
-    end.x = tempx;
-    end.y = tempy;
-}
 void readinput(char *filename, std::vector<Polygon> &polygons){
     std::ifstream inputFile;
     inputFile.open(filename);
@@ -405,100 +406,15 @@ void writeFile(char *filename,std::vector<Polygon> &polygons){
     for (int i = 0; i<polygons.size();i++) {
         outputFile << polygons[i].count << std::endl;
         for(int j = 0; j<polygons[i].count;j++) {
-            outputFile << polygons[i].vertices[j][0] << ' ' << polygons[i].vertices[j][1] << polygons[i].vertices[j][2]<< std::endl;
+            outputFile << polygons[i].vertices[j][0] << ' ' << polygons[i].vertices[j][1] << ' '<< polygons[i].vertices[j][2]<< std::endl;
         }
         outputFile << polygons[i].edgeCount<< std::endl;
-        for(int k = 0; k<polygons[i].count;k++) {
-            outputFile << polygons[i].edges[k][0] << ' ' << polygons[i].edges[k][1] << polygons[i].edges[k][2]<< std::endl;
+        for(int k = 0; k<polygons[i].edgeCount;k++) {
+            outputFile << polygons[i].edges[k][0] << ' ' << polygons[i].edges[k][1]<<std::endl;
         }
         outputFile << std::endl;
     }
 }
-
-bool sortVert(const std::vector<float> &a, const std::vector<float> &b) {
-    return (a[0] < b[0]);
-}
-
-//void rasterization(Polygon &p)
-//{
-//    int numLine = p.count;
-//    for(int y = 0; y < grid_height; y++) {
-//        std::vector<std::vector<float>> arr;
-//        //for each line of poly
-//        for(int n = 0; n < numLine; n++) {
-//            std::vector<float> vA = p.vertices[n];
-//            std::vector<float> vB = p.vertices[(n + 1) % numLine];
-//
-//            float x1 = vA[0];
-//            float y1 = vA[1];
-//            float x2 = vB[0];
-//            float y2 = vB[1];
-//
-//            if(y1 == y && y2 == y) {
-//                continue;
-//            }
-//
-//            if((y1 > y && y2 > y) || (y1 < y && y2 < y)) {
-//                continue;
-//            }
-//
-//            //swap y2 >> y1
-//            if(y2 < y1) {
-//                float tempx = x1;
-//                float tempy = y1;
-//                x1 = x2;
-//                y1 = y2;
-//                x2 = tempx;
-//                y2 = tempy;
-//            }
-//
-//            //min
-//            if(y1 == y) {
-//                arr.push_back(std::vector<float>{x1, (float)y, 1.0});
-//                continue;
-//            }
-//
-//            //max
-//            if(y2 == y) {
-//                continue;
-//            }
-//
-//            //vertical
-//            if(x1 == x2) {
-//                arr.push_back(std::vector<float>{x1, (float)y, 1.0});
-//                continue;
-//            }
-//
-//            //intx
-//            float k = (y2-y1) / (x2-x1);
-//            float intersectVal = x1 + (y-y1) / k;
-//            arr.push_back(std::vector<float>{intersectVal, (float)y, 1.0});
-//        }
-//
-//        std::sort(arr.begin(), arr.end(), sortVert);
-//
-//        int numPair = arr.size() / 2;
-//        for(int k = 0; k < numPair; k++) {
-//            std::vector<float> p1 = arr[2 * k];
-//            std::vector<float> p2 = arr[2 * k + 1];
-//
-//            float xL = p1[0];
-//            float xH = p2[0];
-//
-//            if(floor(xH) == xH) {
-//                xH--;
-//            }
-//
-//            int xLi = ceil(xL);
-//            int xHi = floor(xH);
-//
-//            for(int posX = xLi; posX < xHi + 1; posX++) {
-//                loadBuffer[posX + y * grid_width] = true;
-//            }
-//        }
-//    }
-//}
-
 //Algorithim that copied from the book
 /////////////////////////////////////////////////////////////////////////////////////////////
 typedef float Matrix4x4 [4][4];
@@ -603,7 +519,6 @@ void drawSplitLines(){
     glVertex2f(0.0f, 0.5f);
     glVertex2f(1.0f, 0.5f);
     glEnd();
-    
 }
 
 //this is where we render the screen
@@ -611,18 +526,19 @@ void display()
 {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
-    //find xMax mins.
-    
-    //Apply to the 1/scale to everysingle graph
     drawSplitLines();
-    float scale = 1;
-    float translX = 0;
-    float translY = 0;
-    float translZ = 0;
-
-    cPolygonList.clear();
-    for(int u=0;u<polygonList.size();u++){
-        cPolygonList.push_back(polygonList[u]);
+    float scale = scaleG;
+    float translX = translationXG;
+    float translY = translationYG;
+    float translZ = translationZG;
+    
+    //Set copy buffer polygon Lists to manipulate for first time
+    if(begincheck){
+        cPolygonList.clear();
+           for(int u=0;u<polygonList.size();u++){
+               cPolygonList.push_back(polygonList[u]);
+           }
+        begincheck = false;
     }
     xMax = 0;
     xMin = 99999;
@@ -634,17 +550,21 @@ void display()
     float deltaY = 0;
     float deltaZ = 0;
     float delta = 0;
+    //All polygons
     for(int s = 0; s <cPolygonList.size(); s++){
-        matrix4x4SetIdentity (matComposite);
-        scale3D (scale, scale, scale, polygonList[s].position);
-        if(s == 0){
-            rotate3D(Coord(0,0,0), Coord(1,1,1), 90);
+        matrix4x4SetIdentity(matComposite);
+        if(s == iD ){
+            scale3D (scaleG, scaleG, scaleG, cPolygonList[iD].position);
+            translate3D(translationXG, translationYG,translationZG);
+            if(angleG != 0){
+                rotate3D(Coord(rotX,rotY,rotZ),Coord(ratX,ratY,ratZ),angleG);
+            }
         }
-        for(int i=0; i<polygonList[s].count; i++){
+        for(int i=0; i<cPolygonList[s].count; i++){
             // v' = M * v
-            cPolygonList[s].vertices[i][0] = matComposite[0][0]*polygonList[s].vertices[i][0]*grid_width +matComposite[0][1]* polygonList[s].vertices[i][1]*grid_width + matComposite[0][2]*polygonList[s].vertices[i][2]*grid_width+matComposite[0][3]*1;
-            cPolygonList[s].vertices[i][1] = matComposite[1][0]*polygonList[s].vertices[i][0]*grid_width +matComposite[1][1]* polygonList[s].vertices[i][1]*grid_width+ matComposite[1][2]*polygonList[s].vertices[i][2]*grid_width+matComposite[1][3]*1;
-            cPolygonList[s].vertices[i][2] = matComposite[2][0]*polygonList[s].vertices[i][0]*grid_width +matComposite[2][1]* polygonList[s].vertices[i][1]*grid_width + matComposite[2][2]*polygonList[s].vertices[i][2]*grid_width+matComposite[2][3]*1;
+            cPolygonList[s].vertices[i][0] = matComposite[0][0]*cPolygonList[s].vertices[i][0]*grid_width +matComposite[0][1]* cPolygonList[s].vertices[i][1]*grid_width + matComposite[0][2]*cPolygonList[s].vertices[i][2]*grid_width+matComposite[0][3]*1;
+            cPolygonList[s].vertices[i][1] = matComposite[1][0]*cPolygonList[s].vertices[i][0]*grid_width +matComposite[1][1]* cPolygonList[s].vertices[i][1]*grid_width+ matComposite[1][2]*cPolygonList[s].vertices[i][2]*grid_width+matComposite[1][3]*1;
+            cPolygonList[s].vertices[i][2] = matComposite[2][0]*cPolygonList[s].vertices[i][0]*grid_width +matComposite[2][1]* cPolygonList[s].vertices[i][1]*grid_width + matComposite[2][2]*cPolygonList[s].vertices[i][2]*grid_width+matComposite[2][3]*1;
             
             if(cPolygonList[s].vertices[i][0]>xMax){xMax = cPolygonList[s].vertices[i][0];}
             if(cPolygonList[s].vertices[i][0]<xMin){xMin =  cPolygonList[s].vertices[i][0];}
@@ -654,72 +574,44 @@ void display()
             
             if(cPolygonList[s].vertices[i][2]>zMax){zMax = cPolygonList[s].vertices[i][2];}
             if(cPolygonList[s].vertices[i][2]<zMin){zMin =  cPolygonList[s].vertices[i][2];}
-            //cPolygonList[s].updateCentroid();
         }
     }
-    std::cout<<"Polygons Before : "<<std::endl;
-    cPolygonList[1].printPolygon();
-    cPolygonList[0].printPolygon();
-    cPolygonList[2].printPolygon();
+//    std::cout<<"Polygons Before : "<<std::endl;
+//    cPolygonList[1].printPolygon();
+//    cPolygonList[0].printPolygon();
+//    cPolygonList[2].printPolygon();
     
+    //Padding
+    xMin-=.1f;
+    xMax+=.1f;
+    yMin-=.1f;
+    yMax+=.1f;
+    zMin-=.1f;
+    zMax+=.1f;
     deltaX = xMax - xMin;
     deltaY = yMax - yMin;
     deltaZ = zMax - zMin;
-    delta = fmax(fmax(deltaX, deltaY),deltaZ)+0.1f;
-    std::cout<<"DELTA before "<<delta<<std::endl;
-    std::cout<<"xMin : "<<xMin<<std::endl;
-    std::cout<<"yMin : "<<yMin<<std::endl;
-    std::cout<<"zMin : "<<zMin<<std::endl;
-    std::cout<<"xMax : "<<xMax<<std::endl;
-    std::cout<<"yMax : "<<yMax<<std::endl;
-    std::cout<<"zMax : "<<zMax<<std::endl;
+    delta = fmax(fmax(deltaX, deltaY),deltaZ);
     
     //Bounding BOX
-    if(xMin<0 || xMax>1 || yMin<0 || yMax>1 ||zMin<0 || zMax>1 ){
-        for(int s = 0; s <cPolygonList.size(); s++){
-            for(int i=0; i<cPolygonList[s].count; i++){
-                cPolygonList[s].vertices[i][0] = (cPolygonList[s].vertices[i][0]-xMin)/delta;
-                cPolygonList[s].vertices[i][1] = (cPolygonList[s].vertices[i][1]-yMin)/delta;
-                cPolygonList[s].vertices[i][2] = (cPolygonList[s].vertices[i][2]-zMin)/delta;
-            }
-        }
+    if(bBoxswitch){
+        if(xMin<0 || xMax>1 || yMin<0 || yMax>1 ||zMin<0 || zMax>1 ){
+               for(int s = 0; s <cPolygonList.size(); s++){
+                   for(int i=0; i<cPolygonList[s].count; i++){
+                       cPolygonList[s].vertices[i][0] = (cPolygonList[s].vertices[i][0]-xMin)/delta;
+                       cPolygonList[s].vertices[i][1] = (cPolygonList[s].vertices[i][1]-yMin)/delta;
+                       cPolygonList[s].vertices[i][2] = (cPolygonList[s].vertices[i][2]-zMin)/delta;
+                   }
+               }
+           }
     }
+   
     
-    
-//    if(xMin<0 || xMax>1 || yMin<0 || yMax>1 ||zMin<0 || zMax>1 ){
-//        for(int s = 0; s <cPolygonList.size(); s++){
-//            matrix4x4SetIdentity(matComposite);
-//            translate3D(-xMin,-yMin,-zMin);
-//            scale3D(1/delta, 1/delta, 1/delta, cPolygonList[s].position);
-//            for(int i=0; i<cPolygonList[s].count; i++){
-//                cPolygonList[s].vertices[i][0] = matComposite[0][0]*cPolygonList[s].vertices[i][0]*grid_width +matComposite[0][1]* cPolygonList[s].vertices[i][1]*grid_width + matComposite[0][2]*cPolygonList[s].vertices[i][2]*grid_width+matComposite[0][3]*1;
-//                cPolygonList[s].vertices[i][1] = matComposite[1][0]*cPolygonList[s].vertices[i][0]*grid_width +matComposite[1][1]* cPolygonList[s].vertices[i][1]*grid_width + matComposite[1][2]*cPolygonList[s].vertices[i][2]*grid_width+matComposite[1][3]*1;
-//                cPolygonList[s].vertices[i][2] = matComposite[2][0]*cPolygonList[s].vertices[i][0]*grid_width +matComposite[2][1]* cPolygonList[s].vertices[i][1]*grid_width + matComposite[2][2]*cPolygonList[s].vertices[i][2]*grid_width+matComposite[2][3]*1;
-//            }
-//        }
-//    }
-    
-    std::cout<<"After BountingBox: "<<std::endl;
-    cPolygonList[1].printPolygon();
-    cPolygonList[0].printPolygon();
-    cPolygonList[2].printPolygon();
-    //std::cout<<""<<count<<std::endl;
-    //
-    //        for(int i = 0; i<polygonList[s].count; i++){ //0,1 xy
-    //            if((cPolygonList[s].vertices[i][0]<grid_width)&&(cPolygonList[s].vertices[i][1]<grid_height)){
-    //                draw_pix((cPolygonList[s].vertices[i][0]*(.5)),(cPolygonList[s].vertices[i][1]*(.5)));
-    //            }
-    //        }
-    //        for(int i = 0; i<polygonList[s].count; i++){//0,2 xz
-    //            if(((cPolygonList[s].vertices[i][0])<grid_width)&& ((cPolygonList[s].vertices[i][2])<grid_height)){
-    //                draw_pix((cPolygonList[s].vertices[i][0]*(.5)),(cPolygonList[s].vertices[i][2]*(.5)+.5*grid_width));}
-    //            //std::cout<<"X: "<<(polygonList[0].vertices[i][0])*100<<"  Y: "<<(polygonList[0].vertices[i][1])*100<<std::endl;
-    //        }
-    //        for(int i = 0; i<polygonList[s].count; i++){//1,2 yz
-    //            if((cPolygonList[s].vertices[i][1]<grid_width) && ((cPolygonList[s].vertices[i][2])<grid_height)){
-    //            draw_pix((cPolygonList[s].vertices[i][1]*(.5)+.5*grid_width),(cPolygonList[s].vertices[i][2]*(.5)+.5*grid_width));
-    //        }
-    //        }
+//    std::cout<<"After BountingBox: "<<std::endl;
+//    cPolygonList[1].printPolygon();
+//    cPolygonList[0].printPolygon();
+//    cPolygonList[2].printPolygon();
+   
     for(int s = 0; s <cPolygonList.size(); s++){
         for(int k = 0; k<cPolygonList[s].edgeCount;k++){
             int a = cPolygonList[s].edges[k][0]-1;
@@ -746,106 +638,14 @@ void display()
             }
         }
     }
-    
+//    polygonList.clear();
+    for(int u=0;u<cPolygonList.size();u++){
+        cPolygonList[u].updateCentroid();
+    }
+    writeFile(inputFileName, cPolygonList);
     glutSwapBuffers();
-    //checks for opengl errors
     check();
 }
-/*
- cPolygonList.clear();
- delete(loadBuffer);
- loadBuffer = NULL;
- loadBuffer = new bool[grid_width * grid_height];
- for(int i = 0; i < grid_width * grid_height; i++) {
- loadBuffer[i] = false;
- }
- 
- //clears the screen
- glClear(GL_COLOR_BUFFER_BIT);
- 
- // make temp geometry
- for(int u=0;u<polygonList.size();u++){
- cPolygonList.push_back(polygonList[u]);
- }
- if(iD == -1){
- for(int u=0;u<cPolygonList.size();u++){
- cPolygonList[u].angle = angleG;
- cPolygonList[u].scale = scaleG;
- cPolygonList[u].transVec.x = translationXG;
- cPolygonList[u].transVec.y = translationYG;
- 
- if(!(cPolygonList[u].transVec.x == 0 && cPolygonList[u].transVec.y == 0 )) {
- translation(cPolygonList[u].transVec, cPolygonList[u]);
- }
- 
- if(!(cPolygonList[u].angle == 0)) {
- rotation(cPolygonList[u].angle, cPolygonList[u]);
- }
- 
- if(!(cPolygonList[u].scale == 1)) {
- scaling(cPolygonList[u].scale, cPolygonList[u]);
- }
- 
- cPolygonList[u].transVec = Coord(0.0, 0.0, 0.0);
- cPolygonList[u].angle = 0.0;
- cPolygonList[u].scale = 1.0;
- }
- }else{
- cPolygonList[iD].angle = angleG;
- cPolygonList[iD].scale = scaleG;
- cPolygonList[iD].transVec.x = translationXG;
- cPolygonList[iD].transVec.y = translationYG;
- 
- if(!(cPolygonList[iD].transVec.x == 0 && cPolygonList[iD].transVec.y == 0 )) {
- translation(cPolygonList[iD].transVec, cPolygonList[iD]);
- }
- 
- if(!(cPolygonList[iD].angle == 0)) {
- rotation(cPolygonList[iD].angle, cPolygonList[iD]);
- }
- 
- if(!(cPolygonList[iD].scale == 1)) {
- scaling(cPolygonList[iD].scale, cPolygonList[iD]);
- }
- cPolygonList[iD].transVec = Coord(0.0, 0.0, 0.0);
- cPolygonList[iD].angle = 0.0;
- cPolygonList[iD].scale = 1.0;
- }
- 
- 
- //copy cpoly to poly then work from there next round
- polygonList.clear();
- for(int u=0;u<cPolygonList.size();u++){
- polygonList.push_back(cPolygonList[u]);
- 
- }
- for(int a = 0; a<cPolygonList.size(); a++){
- polyClip(cPolygonList[a]);
- }
- 
- for(auto p : cPolygonList){
- for(int i = 0; i<p.count;i++){
- std::vector<float> cur = p.vertices[i];
- std::vector<float> prev = p.vertices[(i + p.count - 1) % p.count];
- 
- if(lineMode == 'd'){
- drawLineDDA(cur, prev);
- }else{
- drawLineBresenham(cur, prev);
- }
- }
- 
- if(rasterswitch){
- for(auto p : cPolygonList) {
- rasterization(p);
- }
- }
- }
- 
- // draw();
- delete(loadBuffer);
- loadBuffer = NULL;*/
-
 
 //Draws a single "pixel" given the current grid size
 //don't change anything in this for project 1
@@ -905,17 +705,6 @@ void key(unsigned char ch, int x, int y)
 {
     switch (ch)
     {
-        case 'b':
-            lineMode = 'b';
-            break;
-            
-        case 'd':
-            lineMode = 'd';
-            break;
-            
-        case 'r':
-            rasterswitch = ! rasterswitch;
-            break;
             
         default:
             //prints out which key the user hit
