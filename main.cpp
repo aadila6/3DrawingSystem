@@ -521,6 +521,7 @@ void drawSplitLines(){
     
 }
 
+
 //this is where we render the screen
 void display()
 {
@@ -542,7 +543,8 @@ void display()
     float deltaY = 0;
     float deltaZ = 0;
     float delta = 0;
-    
+    Coord axisA =  Coord(0,0,0);
+    Coord axisB = Coord(0,0,0);
     for(int s = 0; s <cPolygonList.size(); s++){
         matrix4x4SetIdentity (matComposite);
 
@@ -550,7 +552,8 @@ void display()
             if(lineMode == 't'){
                 translate3D(translationXG, translationYG, translationZG);}
             else if(lineMode == 'r'){
-                //drawAxis();
+                axisA = Coord(rotX,rotY,rotZ);
+                axisB = Coord(ratX,ratY,ratZ);
                 rotate3D(Coord(rotX,rotY,rotZ),Coord(ratX,ratY,ratZ),angleG);
             }
             else if(lineMode == 's'){
@@ -594,8 +597,20 @@ void display()
             }
         }
     }
-    
-
+    //drawing the axis with bounding box
+    if(lineMode == 'r'){
+        axisA.x = (axisA.x - xMin)/delta;
+        axisA.y = (axisA.y - yMin)/delta;
+        axisA.z = (axisA.z - zMin)/delta;
+        axisB.x = (axisB.x - xMin)/delta;
+        axisB.y = (axisB.y - yMin)/delta;
+        axisA.z = (axisA.z - zMin)/delta;
+        drawLine(axisA.x*(.5),axisA.y*(.5),axisB.x*(.5),axisB.y*(.5));
+        drawLine(axisA.x*(.5),axisA.z*(.5)+(.5),axisB.x*(.5),axisB.z*(.5)+(.5));
+        drawLine(axisA.y*(.5)+(.5),axisA.z*(.5)+(.5),axisB.y*(.5)+(.5),axisB.z*(.5)+(.5));
+    }
+    std::cout<<"AxisA: "<<axisA.x<<" "<<axisA.y<<" "<<axisA.z<<std::endl;
+    std::cout<<"AxisB: "<<axisB.x<<" "<<axisB.y<<" "<<axisB.z<<std::endl;
     for(int s = 0; s <cPolygonList.size(); s++){
         for(int k = 0; k<cPolygonList[s].edgeCount;k++){
             int a = cPolygonList[s].edges[k][0]-1;
