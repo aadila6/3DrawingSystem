@@ -197,7 +197,7 @@ void copyVertex(std::vector<float> &s, std::vector<float> &t);
 
 int main(int argc, char **argv)
 {
-    inputFileName = "bunny_sceneCopy.txt";
+    inputFileName = "testScene.txt";
     pixel_size = 1;
     
     /*Window information*/
@@ -270,7 +270,7 @@ void init()
 {
     //set clear color (Default background to white)
     glClearColor(1.0, 1.0, 1.0, 1.0);
-    glLineWidth(1.0f);
+    //glLineWidth(1.0f);
     //checks for OpenGL errors
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -518,7 +518,6 @@ void drawSplitLines(){
     glVertex2f(0.0f, 0.5f);
     glVertex2f(1.0f, 0.5f);
     glEnd();
-    
 }
 
 
@@ -609,8 +608,7 @@ void display()
         drawLine(axisA.x*(.5),axisA.z*(.5)+(.5),axisB.x*(.5),axisB.z*(.5)+(.5));
         drawLine(axisA.y*(.5)+(.5),axisA.z*(.5)+(.5),axisB.y*(.5)+(.5),axisB.z*(.5)+(.5));
     }
-    std::cout<<"AxisA: "<<axisA.x<<" "<<axisA.y<<" "<<axisA.z<<std::endl;
-    std::cout<<"AxisB: "<<axisB.x<<" "<<axisB.y<<" "<<axisB.z<<std::endl;
+   
     for(int s = 0; s <cPolygonList.size(); s++){
         for(int k = 0; k<cPolygonList[s].edgeCount;k++){
             int a = cPolygonList[s].edges[k][0]-1;
@@ -660,19 +658,6 @@ void draw_pix(int x, int y)
     glVertex3f(x + .5, y + .5, 0);
     glEnd();
 }
-
-//void draw() {
-//    glColor3f(.2, .2, 1.0);
-//
-//    for(int i = 0; i < grid_width * grid_height; i++) {
-//        if(loadBuffer[i]) {
-//            glBegin(GL_POINTS);
-//            glVertex2i(i % grid_width, i / grid_width);
-//            glEnd();
-//        }
-//    }
-//    glFlush();
-//}
 
 /*Gets called when display size changes, including initial craetion of the display*/
 void reshape(int width, int height)
