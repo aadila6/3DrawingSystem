@@ -1,7 +1,7 @@
 /*
+ 
  * Abudureheman Adila
- * ECS 175 Project #2
- * UC Davis, Fall 2019
+
  */
 
 #ifdef WIN32
@@ -35,7 +35,6 @@
 #include <algorithm>
 //other files
 
-
 typedef int OutCode;
 constexpr int INSIDE = 0; // 0000
 constexpr int LEFT = 1;   // 0001
@@ -64,7 +63,6 @@ float zMax;
 
 const double pi = 3.14159265358979323846;
 
-
 //the size of pixels sets the inital window height and width
 //don't make the pixels too large or the screen size will be larger than
 //your display size
@@ -85,31 +83,40 @@ void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
 void check();
 
-
-class Coord {
+/* Coordate system for 3D world space*/
+class Coord
+{
 public:
     float x, y, z;
+
 public:
     Coord(){};
-    Coord(float x, float y, float z) {
+    Coord(float x, float y, float z)
+    {
         this->x = x;
         this->y = y;
         this->z = z;
     }
 };
-class ECoord{
+
+/* Coordinate System respect to the user view (2D) screen space */
+class ECoord
+{
 public:
     int x, y;
+
 public:
     ECoord(){};
-    ECoord(int x, int y) {
+    ECoord(int x, int y)
+    {
         this->x = x;
         this->y = y;
     }
 };
 
-
-class Polygon {
+/* Polygon class with specification required upon creation  */
+class Polygon
+{
     //Center of mass is 0 respect to polygon itself
     //But position vector is the centroid from the viewPort
 public:
@@ -121,24 +128,27 @@ public:
     float scale;
     std::vector<std::vector<float>> vertices;
     std::vector<std::vector<int>> edges;
-    
+
 public:
-    void printPolygon();
-    void updateCentroid();
+    void printPolygon();   // for debug purposes
+    void updateCentroid(); //Updating the centroid with respect to given frame
     Polygon(){};
-    
-    Polygon(std::vector<Coord> &vert, std::vector <ECoord> &edges) {
+
+    Polygon(std::vector<Coord> &vert, std::vector<ECoord> &edges)
+    {
         float xtotal = 0, ytotal = 0;
-        this -> count = vert.size();
-        this ->edgeCount = edges.size();
-        for(int i = 0; i < vert.size(); i++){
+        this->count = vert.size();
+        this->edgeCount = edges.size();
+        for (int i = 0; i < vert.size(); i++)
+        {
             vertices.push_back(std::vector<float>{vert[i].x, vert[i].y, vert[i].z});
         }
-        for(int j=0; j<edges.size();j++){
+        for (int j = 0; j < edges.size(); j++)
+        {
             this->edges.push_back(std::vector<int>{edges[j].x, edges[j].y});
         }
-        this -> updateCentroid();
-        
+        this->updateCentroid();
+
         transVec.x = 0.0;
         transVec.y = 0.0;
         transVec.z = 0.0;
@@ -147,44 +157,47 @@ public:
     }
 };
 
-void Polygon::printPolygon() {
-    std::cout<<"numVertices: "<<this->count<<std::endl;
-    for(int i = 0; i < this->count; i++) {
-        std::cout<<"x: "<<(this->vertices[i])[0]<<" y: "<<(this->vertices[i])[1]<<" z: "<<(this->vertices[i])[2]<<std::endl;
+/* For debugging purpose printing the polygon  */
+void Polygon::printPolygon()
+{
+    std::cout << "numVertices: " << this->count << std::endl;
+    for (int i = 0; i < this->count; i++)
+    {
+        std::cout << "x: " << (this->vertices[i])[0] << " y: " << (this->vertices[i])[1] << " z: " << (this->vertices[i])[2] << std::endl;
     }
-    //  for(int j = 0; j < this->edgeCount; j++) {
-    //     std::cout<<"Edges "<<(this->edges[j])[0]<<" and "<<(this->edges[j])[1]<<std::endl;
-    // }
-    std::cout<<std::endl;
-}
 
-void Polygon::updateCentroid() {
-    float xtotal = 0, ytotal = 0, ztotal=0;
-    for(int i = 0; i < this->count; i++){
+    std::cout << std::endl;
+}
+/* Updating the centroid where applied shifting or rotating or scalling  */
+void Polygon::updateCentroid()
+{
+    float xtotal = 0, ytotal = 0, ztotal = 0;
+    for (int i = 0; i < this->count; i++)
+    {
         xtotal += this->vertices[i][0];
         ytotal += this->vertices[i][1];
         ztotal += this->vertices[i][2];
     }
-    this->position = {xtotal/(float)(this->count), ytotal/(float)(this->count),  ztotal/(float)(this->count)};
+    this->position = {xtotal / (float)(this->count), ytotal / (float)(this->count), ztotal / (float)(this->count)};
 }
+
+/* Global switches/var */
+bool *loadBuffer;
+char lineMode;
+int iD;
+float translationXG, translationYG, translationZG, rotX, rotY, rotZ, ratX, ratY, ratZ, angleG, scaleG;
+bool begincheck;
+std::vector<Polygon> polygonList;
+std::vector<Polygon> cPolygonList;
 
 void readinput(char *filename, std::vector<Polygon> &polygons);
 void writeFile(char *filename, std::vector<Polygon> &polygons);
 void drawLineDDA(std::vector<float> start, std::vector<float> end);
 void drawLineBresenham(Coord start, Coord end);
-//std::vector<float> ComputeIntersection(std::vector<float> a, std::vector<float> b);
-//OutCode computeoutbound(std::vector<float> point);
 void rasterization(Polygon &p);
-bool* loadBuffer;
-std::vector<Polygon> polygonList;
-std::vector<Polygon> cPolygonList;
 void translation(Coord transl, Polygon &poly);
 void rotation(float angle, Polygon &poly);
 void scaling(float scal, Polygon &poly);
-char lineMode;
-int iD;
-float translationXG,translationYG,translationZG,rotX,rotY,rotZ,ratX,ratY,ratZ,angleG,scaleG;
-bool begincheck;
 bool sortVert(const std::vector<float> &a, const std::vector<float> &b);
 void polyClip(Polygon &poly);
 void polyClipLeft(Polygon &poly);
@@ -197,27 +210,19 @@ void copyVertex(std::vector<float> &s, std::vector<float> &t);
 
 int main(int argc, char **argv)
 {
-    inputFileName = "testScene.txt";
+    inputFileName = "bunny_scene.txt";
     pixel_size = 1;
-    
-    /*Window information*/
-    // win_height = grid_height * pixel_size;
-    // win_width = grid_width * pixel_size;
-    
-    /*Set up glut functions*/
-    /** See https://www.opengl.org/resources/libraries/glut/spec3/spec3.html ***/
-    
-    //float translationX=0, translationY=0 , sFactor=1, cliponeX=0,cliponeY=0, cliptwoX=0, cliptwoY=0;
-    grid_width = 1.0f; //500;
+
+    grid_width = 1.0f;  //500;
     grid_height = 1.0f; //500;
-    
+
     xMin = 0;
     xMax = grid_width;
     yMin = 0;
     yMax = grid_height;
-    
+
     lineMode = 't';
-    iD=-1;
+    iD = -1;
     translationXG = 0;
     translationYG = 0;
     translationZG = 0;
@@ -231,17 +236,10 @@ int main(int argc, char **argv)
     scaleG = 1;
     begincheck = true;
     win_height = 500; //grid_height * pixel_size;
-    win_width = 500; //grid_width * pixel_size;
-    //    loadBuffer = new bool[grid_height* grid_width];
-    //    for(int i = 0; i < grid_width; i++){
-    //       for(int j=0; j < grid_height; j++){
-    //           loadBuffer[j*grid_width + i] = false;
-    //       }
-    //    }
+    win_width = 500;  //grid_width * pixel_size;
+
     readinput(inputFileName, polygonList);
-    //polygonList[0].printPolygon();
-    //polygonList[1].printPolygon();
-    //polygonList[2].printPolygon();
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     /*initialize variables, allocate memory, create buffers, etc. */
@@ -249,7 +247,7 @@ int main(int argc, char **argv)
     glutInitWindowSize(win_width, win_height);
     //windown title is "glut demo"
     glutCreateWindow("Three Dimentional Drawing");
-    
+
     /*defined glut callback functions*/
     glutDisplayFunc(display); //rendering calls here
     glutReshapeFunc(reshape); //update GL on window size change
@@ -257,7 +255,7 @@ int main(int argc, char **argv)
     glutMotionFunc(motion);   //mouse movement events
     glutKeyboardFunc(key);    //Keyboard events
     glutIdleFunc(idle);       //Function called while program is sitting "idle"
-    
+
     //initialize opengl variables
     init();
     //start glut event loop
@@ -277,8 +275,11 @@ void init()
     glOrtho(0, grid_width, 0, grid_height, -1, 1);
     check();
 }
-void resetConstrains(){
-    iD=-1;
+
+/*Reseting the constriains when needed*/
+void resetConstrains()
+{
+    iD = -1;
     translationXG = 0;
     translationYG = 0;
     translationZG = 0;
@@ -293,7 +294,8 @@ void resetConstrains(){
 }
 
 //called repeatedly when glut isn't doing anything else
-void idle(){
+void idle()
+{
     //redraw the scene over and over again
     glutPostRedisplay();
     resetConstrains();
@@ -304,41 +306,44 @@ void idle(){
     std::cout << "3. Scalling \n";
     std::cout << "4. Exit \n";
     std::cout << "Please select one of options above for your operation: ";
-    std::cin>> choice;
+    std::cin >> choice;
+    iD = 0;
     switch (choice)
     {
-        case 1:
-            std::cout << "Please enter rotation angle: ";
-            std::cin>> angleG;
-            std::cout << "Please enter rotation Axis (EX. 1 1 1 0 0 0): ";
-            std::cin >> rotX >> rotY >> rotZ >> ratX >> ratY >> ratZ;
-            std::cout << "Please enter Polygon ID like 0,1,2,3.. for specific ones: ";
-            std::cin>> iD;
-            lineMode = 'r';
-            break;
-        case 2:
-            std::cout << "Please enter translation vector seperated by a space (EX. 2 2 2): ";
-            std::cin>> translationXG >> translationYG >> translationZG;
-            std::cout << "Please enter Polygon ID like 0,1,2,3.. for specific ones: ";
-            std::cin>> iD;
-            lineMode = 't';
-            break;
-        case 3:
-            std::cout << "Please enter scalling factor: " ;
-            std::cin>> scaleG;
-            std::cout << "Please enter Polygon ID like 0,1,2,3.. for specific ones: ";
-            std::cin>> iD;
-            lineMode = 's';
-            break;
-        case 4:
-            writeFile(inputFileName, polygonList);
-            exit(0);
-            break;
-        default:
-            break;
+    case 1:
+        std::cout << "Please enter rotation angle: ";
+        std::cin >> angleG;
+        std::cout << "Please enter rotation Axis (EX. 1 1 1 0 0 0): ";
+        std::cin >> rotX >> rotY >> rotZ >> ratX >> ratY >> ratZ;
+        // std::cout << "Please enter Polygon ID like 0 to n for specific ones: ";
+        // std::cin >> iD;
+        lineMode = 'r';
+        break;
+    case 2:
+        std::cout << "Please enter translation vector seperated by a space (EX. 2 2 2): ";
+        std::cin >> translationXG >> translationYG >> translationZG;
+        // std::cout << "Please enter Polygon ID like 0,1,2,3.. for specific ones: ";
+        // std::cin >> iD;
+        lineMode = 't';
+        break;
+    case 3:
+        std::cout << "Please enter scalling factor: ";
+        std::cin >> scaleG;
+        // std::cout << "Please enter Polygon ID like 0,1,2,3.. for specific ones: ";
+        // std::cin >> iD;
+        lineMode = 's';
+        break;
+    case 4:
+        writeFile(inputFileName, polygonList);
+        exit(0);
+        break;
+    default:
+        break;
+    }
 }
-}
-void readinput(char *filename, std::vector<Polygon> &polygons){
+
+void readinput(char *filename, std::vector<Polygon> &polygons)
+{
     std::ifstream inputFile;
     inputFile.open(filename);
     std::string line;
@@ -347,17 +352,19 @@ void readinput(char *filename, std::vector<Polygon> &polygons){
     inputFile >> count;
     getline(inputFile, line); //line 1
     getline(inputFile, line); //point count
-    for (int i=0; i< count; i++){
+    for (int i = 0; i < count; i++)
+    {
         int num;
-        std::vector <Coord> vertices;
-        std::vector <ECoord> edges;
+        std::vector<Coord> vertices;
+        std::vector<ECoord> edges;
         inputFile >> num;
         getline(inputFile, line);
-        for (int j=0; j<num; j++){
+        for (int j = 0; j < num; j++)
+        {
             float x, y, z;
             std::string inputX, inputY, inputZ;
             getline(inputFile, line);
-            std :: istringstream record(line);
+            std ::istringstream record(line);
             getline(record, inputX, ' ');
             getline(record, inputY, ' ');
             getline(record, inputZ);
@@ -370,14 +377,15 @@ void readinput(char *filename, std::vector<Polygon> &polygons){
             point.z = z;
             vertices.push_back(point);
         }
-        std :: string input;
+        std ::string input;
         getline(inputFile, line);
         edgeCount = std::stoi(line);
-        for (int j=0; j<edgeCount; j++){
+        for (int j = 0; j < edgeCount; j++)
+        {
             int x, y;
-            std :: string inputX, inputY;
+            std ::string inputX, inputY;
             getline(inputFile, line);
-            std :: istringstream record(line);
+            std ::istringstream record(line);
             getline(record, inputX, ' ');
             getline(record, inputY);
             x = std::stoi(inputX);
@@ -393,133 +401,143 @@ void readinput(char *filename, std::vector<Polygon> &polygons){
     }
     inputFile.close();
 }
-void writeFile(char *filename,std::vector<Polygon> &polygons){
+
+
+/* Writing to the resulted coordinates into a file 
+   When user reopen the application, the previous information is kept
+*/
+void writeFile(char *filename, std::vector<Polygon> &polygons)
+{
     std::ofstream outputFile(filename);
     outputFile << polygons.size() << "\n\n";
-    for (int i = 0; i<polygons.size();i++) {
+    for (int i = 0; i < polygons.size(); i++)
+    {
         outputFile << polygons[i].count << std::endl;
-        for(int j = 0; j<polygons[i].count;j++) {
-            outputFile << polygons[i].vertices[j][0] << ' ' << polygons[i].vertices[j][1] << ' '<< polygons[i].vertices[j][2]<< std::endl;
+        for (int j = 0; j < polygons[i].count; j++)
+        {
+            outputFile << polygons[i].vertices[j][0] << ' ' << polygons[i].vertices[j][1] << ' ' << polygons[i].vertices[j][2] << std::endl;
         }
-        outputFile << polygons[i].edgeCount<< std::endl;
-        for(int k = 0; k<polygons[i].edgeCount;k++) {
-            outputFile << polygons[i].edges[k][0] << ' ' << polygons[i].edges[k][1]<<std::endl;
+        outputFile << polygons[i].edgeCount << std::endl;
+        for (int k = 0; k < polygons[i].edgeCount; k++)
+        {
+            outputFile << polygons[i].edges[k][0] << ' ' << polygons[i].edges[k][1] << std::endl;
         }
         outputFile << std::endl;
     }
-
 }
 
-bool sortVert(const std::vector<float> &a, const std::vector<float> &b) {
+/*  */
+bool sortVert(const std::vector<float> &a, const std::vector<float> &b)
+{
     return (a[0] < b[0]);
 }
 
-//Algorithim that copied from the book
-/////////////////////////////////////////////////////////////////////////////////////////////
-typedef float Matrix4x4 [4][4];
+typedef float Matrix4x4[4][4];
 Matrix4x4 matComposite;
-void matrix4x4SetIdentity (Matrix4x4 matIdent4x4)
+void matrix4x4SetIdentity(Matrix4x4 matIdent4x4)
 {
     int row, col;
     for (row = 0; row < 4; row++)
-        for (col = 0; col < 4 ; col++)
-            matIdent4x4 [row][col] = (row == col);
+        for (col = 0; col < 4; col++)
+            matIdent4x4[row][col] = (row == col);
 }
 
 /* Premultiply matrix m1 by matrix m2, store result in m2. */
-void matrix4x4PreMultiply (Matrix4x4 m1, Matrix4x4 m2)
+void matrix4x4PreMultiply(Matrix4x4 m1, Matrix4x4 m2)
 {
     int row, col;
     Matrix4x4 matTemp;
     for (row = 0; row < 4; row++)
-        for (col = 0; col < 4 ; col++)
-            matTemp [row][col] = m1 [row][0] * m2 [0][col] + m1 [row][1] *
-            m2 [1][col] + m1 [row][2] * m2 [2][col] +
-            m1 [row][3] * m2 [3][col];
+        for (col = 0; col < 4; col++)
+            matTemp[row][col] = m1[row][0] * m2[0][col] + m1[row][1] * m2[1][col] + m1[row][2] * m2[2][col] +
+                                m1[row][3] * m2[3][col];
     for (row = 0; row < 4; row++)
         for (col = 0; col < 4; col++)
-            m2 [row][col] = matTemp [row][col];
+            m2[row][col] = matTemp[row][col];
 }
 /*  Procedure for generating 3-D translation matrix.  */
-void translate3D (float tx, float ty, float tz)
+void translate3D(float tx, float ty, float tz)
 {
     Matrix4x4 matTransl3D;
     /*  Initialize translation matrix to identity.  */
-    matrix4x4SetIdentity (matTransl3D);
-    matTransl3D [0][3] = tx;
-    matTransl3D [1][3] = ty;
-    matTransl3D [2][3] = tz;
+    matrix4x4SetIdentity(matTransl3D);
+    matTransl3D[0][3] = tx;
+    matTransl3D[1][3] = ty;
+    matTransl3D[2][3] = tz;
     /*  Concatenate matTransl3D with composite matrix.  */
-    matrix4x4PreMultiply (matTransl3D, matComposite);
+    matrix4x4PreMultiply(matTransl3D, matComposite);
 }
+
 /*  Procedure for generating a quaternion rotation matrix.  */
-void rotate3D (Coord p1, Coord p2, float angle)
+void rotate3D(Coord p1, Coord p2, float angle)
 {
     Matrix4x4 matQuatRot;
-    float radianAngle= (angle / 180.0) * 3.14;
-    float axisVectLength = sqrt ((p2.x - p1.x) * (p2.x - p1.x) +
-                                 (p2.y - p1.y) * (p2.y - p1.y) +
-                                 (p2.z - p1.z) * (p2.z - p1.z));
-    float cosA = cosf (radianAngle);
+    float radianAngle = (angle / 180.0) * 3.14;
+    float axisVectLength = sqrt((p2.x - p1.x) * (p2.x - p1.x) +
+                                (p2.y - p1.y) * (p2.y - p1.y) +
+                                (p2.z - p1.z) * (p2.z - p1.z));
+    float cosA = cosf(radianAngle);
     float oneC = 1 - cosA;
-    float sinA = sinf (radianAngle);
+    float sinA = sinf(radianAngle);
     float ux = (p2.x - p1.x) / axisVectLength;
     float uy = (p2.y - p1.y) / axisVectLength;
     float uz = (p2.z - p1.z) / axisVectLength;
     /*  Set up translation matrix for moving p1 to origin,
      *  and concatenate translation matrix with matComposite.
      */
-    translate3D (-p1.x, -p1.y, -p1.z);
+    translate3D(-p1.x, -p1.y, -p1.z);
     /*  Initialize matQuatRot to identity matrix.  */
-    matrix4x4SetIdentity (matQuatRot);
-    matQuatRot [0][0] = ux*ux*oneC + cosA;
-    matQuatRot [0][1] = ux*uy*oneC - uz*sinA;
-    matQuatRot [0][2] = ux*uz*oneC + uy*sinA;
-    matQuatRot [1][0] = uy*ux*oneC + uz*sinA;
-    matQuatRot [1][1] = uy*uy*oneC + cosA;
-    matQuatRot [1][2] = uy*uz*oneC - ux*sinA;
-    matQuatRot [2][0] = uz*ux*oneC - uy*sinA;
-    matQuatRot [2][1] = uz*uy*oneC + ux*sinA;
-    matQuatRot [2][2] = uz*uz*oneC + cosA;
+    matrix4x4SetIdentity(matQuatRot);
+    matQuatRot[0][0] = ux * ux * oneC + cosA;
+    matQuatRot[0][1] = ux * uy * oneC - uz * sinA;
+    matQuatRot[0][2] = ux * uz * oneC + uy * sinA;
+    matQuatRot[1][0] = uy * ux * oneC + uz * sinA;
+    matQuatRot[1][1] = uy * uy * oneC + cosA;
+    matQuatRot[1][2] = uy * uz * oneC - ux * sinA;
+    matQuatRot[2][0] = uz * ux * oneC - uy * sinA;
+    matQuatRot[2][1] = uz * uy * oneC + ux * sinA;
+    matQuatRot[2][2] = uz * uz * oneC + cosA;
     /*  Concatenate matQuatRot with composite matrix.  */
-    matrix4x4PreMultiply (matQuatRot, matComposite);
+    matrix4x4PreMultiply(matQuatRot, matComposite);
     /*  Construct inverse translation matrix for p1 and
      *  concatenate with composite matrix.
      */
-    translate3D (p1.x, p1.y, p1.z);
+    translate3D(p1.x, p1.y, p1.z);
 }
+
 /*  Procedure for generating a 3-D scaling matrix.  */
-void scale3D (float sx, float sy, float sz, std::vector<float>fixedPt)
+void scale3D(float sx, float sy, float sz, std::vector<float> fixedPt)
 {
     Matrix4x4 matScale3D;
     /*  Initialize scaling matrix to identity.  */
-    matrix4x4SetIdentity (matScale3D);
-    matScale3D [0][0] = sx;
-    matScale3D [0][3] = (1 - sx) * fixedPt[0]*grid_width;
-    matScale3D [1][1] = sy;
-    matScale3D [1][3] = (1 - sy) * fixedPt[1]*grid_width;
-    matScale3D [2][2] = sz;
-    matScale3D [2][3] = (1 - sz) * fixedPt[2]*grid_width;
+    matrix4x4SetIdentity(matScale3D);
+    matScale3D[0][0] = sx;
+    matScale3D[0][3] = (1 - sx) * fixedPt[0] * grid_width;
+    matScale3D[1][1] = sy;
+    matScale3D[1][3] = (1 - sy) * fixedPt[1] * grid_width;
+    matScale3D[2][2] = sz;
+    matScale3D[2][3] = (1 - sz) * fixedPt[2] * grid_width;
     /*  Concatenate matScale3D with composite matrix.  */
-    matrix4x4PreMultiply (matScale3D, matComposite);
+    matrix4x4PreMultiply(matScale3D, matComposite);
 }
-void drawLine(float x1 ,float y1, float x2, float y2){
+void drawLine(float x1, float y1, float x2, float y2)
+{
     glBegin(GL_LINES);
-    glVertex2f(x1,y1);
-    glVertex2f(x2,y2);
+    glVertex2f(x1, y1);
+    glVertex2f(x2, y2);
     glEnd();
 }
 
-void drawSplitLines(){
+void drawSplitLines()
+{
     glColor3f(0.41, 0.4, 0.4);
     glBegin(GL_LINES);
-    glVertex2f(0.5f,0.0f);
+    glVertex2f(0.5f, 0.0f);
     glVertex2f(0.5f, 1.0f);
     glVertex2f(0.0f, 0.5f);
     glVertex2f(1.0f, 0.5f);
     glEnd();
 }
-
 
 //this is where we render the screen
 void display()
@@ -529,7 +547,8 @@ void display()
     //find xMax mins.
     drawSplitLines();
     cPolygonList.clear();
-    for(int u=0;u<polygonList.size();u++){
+    for (int u = 0; u < polygonList.size(); u++)
+    {
         cPolygonList.push_back(polygonList[u]);
     }
     xMax = 0;
@@ -542,112 +561,145 @@ void display()
     float deltaY = 0;
     float deltaZ = 0;
     float delta = 0;
-    Coord axisA =  Coord(0,0,0);
-    Coord axisB = Coord(0,0,0);
-    for(int s = 0; s <cPolygonList.size(); s++){
-        matrix4x4SetIdentity (matComposite);
+    Coord axisA = Coord(0, 0, 0);
+    Coord axisB = Coord(0, 0, 0);
+    for (int s = 0; s < cPolygonList.size(); s++)
+    {
+        matrix4x4SetIdentity(matComposite);
 
-        if(s == iD ){
-            if(lineMode == 't'){
-                translate3D(translationXG, translationYG, translationZG);}
-            else if(lineMode == 'r'){
-                axisA = Coord(rotX,rotY,rotZ);
-                axisB = Coord(ratX,ratY,ratZ);
-                rotate3D(Coord(rotX,rotY,rotZ),Coord(ratX,ratY,ratZ),angleG);
+        if (s == iD)
+        {
+            if (lineMode == 't')
+            {
+                translate3D(translationXG, translationYG, translationZG);
             }
-            else if(lineMode == 's'){
-                scale3D (scaleG, scaleG, scaleG, cPolygonList[iD].position);}
+            else if (lineMode == 'r')
+            {
+                axisA = Coord(rotX, rotY, rotZ);
+                axisB = Coord(ratX, ratY, ratZ);
+                rotate3D(Coord(rotX, rotY, rotZ), Coord(ratX, ratY, ratZ), angleG);
+            }
+            else if (lineMode == 's')
+            {
+                scale3D(scaleG, scaleG, scaleG, cPolygonList[iD].position);
+            }
         }
-        for(int i=0; i<polygonList[s].count; i++){
+        for (int i = 0; i < polygonList[s].count; i++)
+        {
             // v' = M * v
-            cPolygonList[s].vertices[i][0] = matComposite[0][0]*polygonList[s].vertices[i][0]*grid_width +matComposite[0][1]* polygonList[s].vertices[i][1]*grid_width + matComposite[0][2]*polygonList[s].vertices[i][2]*grid_width+matComposite[0][3]*1;
-            cPolygonList[s].vertices[i][1] = matComposite[1][0]*polygonList[s].vertices[i][0]*grid_width +matComposite[1][1]* polygonList[s].vertices[i][1]*grid_width+ matComposite[1][2]*polygonList[s].vertices[i][2]*grid_width+matComposite[1][3]*1;
-            cPolygonList[s].vertices[i][2] = matComposite[2][0]*polygonList[s].vertices[i][0]*grid_width +matComposite[2][1]* polygonList[s].vertices[i][1]*grid_width + matComposite[2][2]*polygonList[s].vertices[i][2]*grid_width+matComposite[2][3]*1;
-           
-            if(cPolygonList[s].vertices[i][0]>xMax){xMax = cPolygonList[s].vertices[i][0];}
-            if(cPolygonList[s].vertices[i][0]<xMin){xMin =  cPolygonList[s].vertices[i][0];}
-            
-            if(cPolygonList[s].vertices[i][1]>yMax){yMax = cPolygonList[s].vertices[i][1];}
-            if(cPolygonList[s].vertices[i][1]<yMin){yMin =  cPolygonList[s].vertices[i][1];}
-            
-            if(cPolygonList[s].vertices[i][2]>zMax){zMax = cPolygonList[s].vertices[i][2];}
-            if(cPolygonList[s].vertices[i][2]<zMin){zMin =  cPolygonList[s].vertices[i][2];}
+            cPolygonList[s].vertices[i][0] = matComposite[0][0] * polygonList[s].vertices[i][0] * grid_width + matComposite[0][1] * polygonList[s].vertices[i][1] * grid_width + matComposite[0][2] * polygonList[s].vertices[i][2] * grid_width + matComposite[0][3] * 1;
+            cPolygonList[s].vertices[i][1] = matComposite[1][0] * polygonList[s].vertices[i][0] * grid_width + matComposite[1][1] * polygonList[s].vertices[i][1] * grid_width + matComposite[1][2] * polygonList[s].vertices[i][2] * grid_width + matComposite[1][3] * 1;
+            cPolygonList[s].vertices[i][2] = matComposite[2][0] * polygonList[s].vertices[i][0] * grid_width + matComposite[2][1] * polygonList[s].vertices[i][1] * grid_width + matComposite[2][2] * polygonList[s].vertices[i][2] * grid_width + matComposite[2][3] * 1;
+
+            if (cPolygonList[s].vertices[i][0] > xMax)
+            {
+                xMax = cPolygonList[s].vertices[i][0];
+            }
+            if (cPolygonList[s].vertices[i][0] < xMin)
+            {
+                xMin = cPolygonList[s].vertices[i][0];
+            }
+
+            if (cPolygonList[s].vertices[i][1] > yMax)
+            {
+                yMax = cPolygonList[s].vertices[i][1];
+            }
+            if (cPolygonList[s].vertices[i][1] < yMin)
+            {
+                yMin = cPolygonList[s].vertices[i][1];
+            }
+
+            if (cPolygonList[s].vertices[i][2] > zMax)
+            {
+                zMax = cPolygonList[s].vertices[i][2];
+            }
+            if (cPolygonList[s].vertices[i][2] < zMin)
+            {
+                zMin = cPolygonList[s].vertices[i][2];
+            }
         }
     }
-    
-    xMin-=.1f;
-    xMax+=.1f;
-    yMin-=.1f;
-    yMax+=.1f;
-    zMin-=.1f;
-    zMax+=.1f;
+
+    xMin -= .1f;
+    xMax += .1f;
+    yMin -= .1f;
+    yMax += .1f;
+    zMin -= .1f;
+    zMax += .1f;
     deltaX = xMax - xMin;
     deltaY = yMax - yMin;
     deltaZ = zMax - zMin;
-    delta = fmax(fmax(deltaX, deltaY),deltaZ)+0.1f;
-    
-    //Bounding BOX
-    if(xMin<0 || xMax>1 || yMin<0 || yMax>1 ||zMin<0 || zMax>1 ){
-        for(int s = 0; s <cPolygonList.size(); s++){
-            for(int i=0; i<cPolygonList[s].count; i++){
-                cPolygonList[s].vertices[i][0] = (cPolygonList[s].vertices[i][0]-xMin)/delta;
-                cPolygonList[s].vertices[i][1] = (cPolygonList[s].vertices[i][1]-yMin)/delta;
-                cPolygonList[s].vertices[i][2] = (cPolygonList[s].vertices[i][2]-zMin)/delta;
+    delta = fmax(fmax(deltaX, deltaY), deltaZ) + 0.1f;
+
+    /*Bounding BOX where if the scene goes out of the scene, we can reset it back.*/
+    if (xMin < 0 || xMax > 1 || yMin < 0 || yMax > 1 || zMin < 0 || zMax > 1)
+    {
+        for (int s = 0; s < cPolygonList.size(); s++)
+        {
+            for (int i = 0; i < cPolygonList[s].count; i++)
+            {
+                cPolygonList[s].vertices[i][0] = (cPolygonList[s].vertices[i][0] - xMin) / delta;
+                cPolygonList[s].vertices[i][1] = (cPolygonList[s].vertices[i][1] - yMin) / delta;
+                cPolygonList[s].vertices[i][2] = (cPolygonList[s].vertices[i][2] - zMin) / delta;
             }
         }
     }
-    //drawing the axis with bounding box
-    if(lineMode == 'r'){
-        axisA.x = (axisA.x - xMin)/delta;
-        axisA.y = (axisA.y - yMin)/delta;
-        axisA.z = (axisA.z - zMin)/delta;
-        axisB.x = (axisB.x - xMin)/delta;
-        axisB.y = (axisB.y - yMin)/delta;
-        axisA.z = (axisA.z - zMin)/delta;
-        drawLine(axisA.x*(.5),axisA.y*(.5),axisB.x*(.5),axisB.y*(.5));
-        drawLine(axisA.x*(.5),axisA.z*(.5)+(.5),axisB.x*(.5),axisB.z*(.5)+(.5));
-        drawLine(axisA.y*(.5)+(.5),axisA.z*(.5)+(.5),axisB.y*(.5)+(.5),axisB.z*(.5)+(.5));
+    /* Drawing the axis with bounding box */
+    if (lineMode == 'r')
+    {
+        axisA.x = (axisA.x - xMin) / delta;
+        axisA.y = (axisA.y - yMin) / delta;
+        axisA.z = (axisA.z - zMin) / delta;
+        axisB.x = (axisB.x - xMin) / delta;
+        axisB.y = (axisB.y - yMin) / delta;
+        axisA.z = (axisA.z - zMin) / delta;
+        drawLine(axisA.x * (.5), axisA.y * (.5), axisB.x * (.5), axisB.y * (.5));
+        drawLine(axisA.x * (.5), axisA.z * (.5) + (.5), axisB.x * (.5), axisB.z * (.5) + (.5));
+        drawLine(axisA.y * (.5) + (.5), axisA.z * (.5) + (.5), axisB.y * (.5) + (.5), axisB.z * (.5) + (.5));
     }
-   
-    for(int s = 0; s <cPolygonList.size(); s++){
-        for(int k = 0; k<cPolygonList[s].edgeCount;k++){
-            int a = cPolygonList[s].edges[k][0]-1;
-            int b = cPolygonList[s].edges[k][1]-1;
-            if((cPolygonList[s].vertices[a][0]<grid_width)&&(cPolygonList[s].vertices[b][0]<grid_width)&&
-               (cPolygonList[s].vertices[b][1]<grid_height)&&(cPolygonList[s].vertices[a][1]<grid_height)){
-                drawLine(cPolygonList[s].vertices[a][0]*(.5),
-                         cPolygonList[s].vertices[a][1]*(.5),
-                         cPolygonList[s].vertices[b][0]*(.5),
-                         cPolygonList[s].vertices[b][1]*(.5));
+
+    for (int s = 0; s < cPolygonList.size(); s++)
+    {
+        for (int k = 0; k < cPolygonList[s].edgeCount; k++)
+        {
+            int a = cPolygonList[s].edges[k][0] - 1;
+            int b = cPolygonList[s].edges[k][1] - 1;
+            if ((cPolygonList[s].vertices[a][0] < grid_width) && (cPolygonList[s].vertices[b][0] < grid_width) &&
+                (cPolygonList[s].vertices[b][1] < grid_height) && (cPolygonList[s].vertices[a][1] < grid_height))
+            {
+                drawLine(cPolygonList[s].vertices[a][0] * (.5),
+                         cPolygonList[s].vertices[a][1] * (.5),
+                         cPolygonList[s].vertices[b][0] * (.5),
+                         cPolygonList[s].vertices[b][1] * (.5));
             }
-            if(((cPolygonList[s].vertices[a][0])<grid_width)&&((cPolygonList[s].vertices[b][0])<grid_width)&& ((cPolygonList[s].vertices[b][2])<grid_height)&&((cPolygonList[s].vertices[a][2])<grid_height)){
-                drawLine(cPolygonList[s].vertices[a][0]*(.5),
-                         cPolygonList[s].vertices[a][2]*(.5)+.5*grid_width,
-                         cPolygonList[s].vertices[b][0]*(.5),
-                         cPolygonList[s].vertices[b][2]*(.5)+.5*grid_width);
+            if (((cPolygonList[s].vertices[a][0]) < grid_width) && ((cPolygonList[s].vertices[b][0]) < grid_width) && ((cPolygonList[s].vertices[b][2]) < grid_height) && ((cPolygonList[s].vertices[a][2]) < grid_height))
+            {
+                drawLine(cPolygonList[s].vertices[a][0] * (.5),
+                         cPolygonList[s].vertices[a][2] * (.5) + .5 * grid_width,
+                         cPolygonList[s].vertices[b][0] * (.5),
+                         cPolygonList[s].vertices[b][2] * (.5) + .5 * grid_width);
             }
-            if((cPolygonList[s].vertices[a][1]<grid_width)&&(cPolygonList[s].vertices[b][1]<grid_width)&&
-               ((cPolygonList[s].vertices[b][2])<grid_height) && ((cPolygonList[s].vertices[a][2])<grid_height)){
-                drawLine(cPolygonList[s].vertices[a][1]*(.5)+.5*grid_width,
-                         cPolygonList[s].vertices[a][2]*(.5)+.5*grid_width,
-                         cPolygonList[s].vertices[b][1]*(.5)+.5*grid_width,
-                         cPolygonList[s].vertices[b][2]*(.5)+.5*grid_width);
+            if ((cPolygonList[s].vertices[a][1] < grid_width) && (cPolygonList[s].vertices[b][1] < grid_width) &&
+                ((cPolygonList[s].vertices[b][2]) < grid_height) && ((cPolygonList[s].vertices[a][2]) < grid_height))
+            {
+                drawLine(cPolygonList[s].vertices[a][1] * (.5) + .5 * grid_width,
+                         cPolygonList[s].vertices[a][2] * (.5) + .5 * grid_width,
+                         cPolygonList[s].vertices[b][1] * (.5) + .5 * grid_width,
+                         cPolygonList[s].vertices[b][2] * (.5) + .5 * grid_width);
             }
         }
     }
-    
     glutSwapBuffers();
     //checks for opengl errors
     check();
     polygonList.clear();
-    for(int u=0;u<cPolygonList.size();u++){
+    for (int u = 0; u < cPolygonList.size(); u++)
+    {
         cPolygonList[u].updateCentroid();
         polygonList.push_back(cPolygonList[u]);
     }
     writeFile(inputFileName, polygonList);
 }
-
-
 
 //Draws a single "pixel" given the current grid size
 //don't change anything in this for project 1
@@ -666,7 +718,7 @@ void reshape(int width, int height)
     //update the ne window width and height
     win_width = width;
     win_height = height;
-    
+
     //creates a rendering area across the window
     glViewport(0, 0, width, height);
     // up an orthogonal projection matrix so that
@@ -674,15 +726,15 @@ void reshape(int width, int height)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, grid_width, 0, grid_height, -10, 10);
-    
+
     //clear the modelview matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    
+
     //set pixel size based on width, if the aspect ratio
     //changes this hack won't work as well
     pixel_size = width / (float)grid_width;
-    
+
     //set pixel size relative to the grid cell size
     glPointSize(pixel_size);
     //check for opengl errors
@@ -694,23 +746,22 @@ void key(unsigned char ch, int x, int y)
 {
     switch (ch)
     {
-        case 'b':
-            lineMode = 'b';
-            break;
-            
-        case 'd':
-            lineMode = 'd';
-            break;
-            
-        default:
-            //prints out which key the user hit
-            printf("User hit the \"%c\" key\n", ch);
-            break;
+    case 'b':
+        lineMode = 'b';
+        break;
+
+    case 'd':
+        lineMode = 'd';
+        break;
+
+    default:
+        //prints out which key the user hit
+        printf("User hit the \"%c\" key\n", ch);
+        break;
     }
     //redraw the scene after keyboard input
     glutPostRedisplay();
 }
-
 
 //gets called when a mouse button is pressed
 void mouse(int button, int state, int x, int y)
@@ -719,20 +770,20 @@ void mouse(int button, int state, int x, int y)
     printf("MOUSE AT PIXEL: %d %d, GRID: %d %d\n", x, y, (int)(x / pixel_size), (int)((win_height - y) / pixel_size));
     switch (button)
     {
-        case GLUT_LEFT_BUTTON: //left button
-            printf("LEFT ");
-            break;
-        case GLUT_RIGHT_BUTTON: //right button
-            printf("RIGHT ");
-        default:
-            printf("UNKNOWN "); //any other mouse button
-            break;
+    case GLUT_LEFT_BUTTON: //left button
+        printf("LEFT ");
+        break;
+    case GLUT_RIGHT_BUTTON: //right button
+        printf("RIGHT ");
+    default:
+        printf("UNKNOWN "); //any other mouse button
+        break;
     }
     if (state != GLUT_DOWN) //button released
         printf("BUTTON UP\n");
     else
         printf("BUTTON DOWN\n"); //button clicked
-    
+
     //redraw the scene after mouse click
     glutPostRedisplay();
 }
@@ -755,5 +806,3 @@ void check()
         exit(1);
     }
 }
-
-
